@@ -7,15 +7,15 @@ from users.schemas import UserRole
 
 def get_user_by_register(db: Session, login: str, email: str | None):
     if email is None:
-        statement = select(User).where(User.login == login)
+        stmt = select(User).where(User.login == login)
     else:
-        statement = select(User).where(
+        stmt = select(User).where(
             or_(
                 User.login == login,
                 User.email == email
             )
         )
-    return db.execute(statement).scalar_one_or_none()
+    return db.execute(stmt).scalar_one_or_none()
 
 def create_user(db: Session, login: str, email: str | None, password: str):
     db_user = User(login = login,
