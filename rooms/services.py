@@ -3,8 +3,6 @@ from sqlalchemy.orm import Session
 
 from rooms.models import Room
 
-
-
 def create_room(db: Session, name: str, capacity: int, description: str | None):
     room = Room(
         name=name,
@@ -16,6 +14,14 @@ def create_room(db: Session, name: str, capacity: int, description: str | None):
     db.commit()
     db.refresh(room)
     return room
+
+def get_room_by_id(db: Session, room_id: int):
+    stmt = select(Room).where(Room.id==room_id)
+
+    if stmt is None:
+        return None
+
+    return db.execute(stmt).scalar_one_or_none()
 
 def get_rooms(db: Session, limit: int, offset: int):
     stmt = (

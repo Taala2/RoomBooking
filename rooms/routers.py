@@ -1,12 +1,10 @@
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 
 from core.database import get_db
 from core.security import Current_admin
-from rooms.schemas import ListRoomResponse, RoomCreateReponse, RoomCreateRequest
-from rooms.services import count_rooms, create_room, get_rooms
-from users.schemas import UserRole
-
+from rooms.schemas import ListRoomResponse, RoomCreateReponse, RoomCreateRequest, RoomResponse
+from rooms.services import count_rooms, create_room, get_room_by_id, get_rooms
 
 router = APIRouter(prefix="/rooms", tags=["rooms"])
 
@@ -46,4 +44,18 @@ def list_rooms(
         total=total,
         limit=limit,
         offset=offset
+    )
+
+@router.get("/{room_id}", response_model=RoomResponse)
+def get_room(room_id: int, db: Session = Depends(get_db)):
+    res = get_room_by_id(db, room_id)
+
+    if res is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Комната не найдено")
+
+    return RoomResponse(
+        id=res.id,
+        name=res.name,
+        capacity=res.capacity,
+        description=res.description
     )
