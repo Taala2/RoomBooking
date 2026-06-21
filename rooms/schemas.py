@@ -1,16 +1,21 @@
 from pydantic import BaseModel, Field
 
 
-class RoomCreateReponse(BaseModel):
+class RoomReponse(BaseModel):
     id: int
     name: str = Field(min_length=3, max_length=255)
     capacity: int
     description: str | None
 
-class RoomCreateRequest(BaseModel):
+class RoomRequest(BaseModel):
     name: str = Field(min_length=3, max_length=255)
     capacity: int
     description: str | None
+
+class RoomChangeRequest(BaseModel):
+    name: str | None = Field(default=None, min_length=3, max_length=255)
+    capacity: int | None = None
+    description: str | None = None
 
 class RoomResponse(BaseModel):
     id: int

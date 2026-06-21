@@ -1,6 +1,7 @@
-from sqlalchemy import func, select
+from sqlalchemy import delete, func, select
 from sqlalchemy.orm import Session
 
+from core.database import SessionLocal
 from rooms.models import Room
 
 def create_room(db: Session, name: str, capacity: int, description: str | None):
@@ -16,12 +17,7 @@ def create_room(db: Session, name: str, capacity: int, description: str | None):
     return room
 
 def get_room_by_id(db: Session, room_id: int):
-    stmt = select(Room).where(Room.id==room_id)
-
-    if stmt is None:
-        return None
-
-    return db.execute(stmt).scalar_one_or_none()
+    return db.get(Room, room_id)
 
 def get_rooms(db: Session, limit: int, offset: int):
     stmt = (
@@ -36,19 +32,44 @@ def count_rooms(db: Session):
 
     return db.scalar(stmt) or 0
 
+def delete_room_by_id(db: Session, room_id: int):
+    room = db.get(Room, room_id)
+
+    if room:
+        db.delete(room)
+        db.commit()
+
+    return room
+
+def update_room_by_id(
+        db: Session,
+        room_id: int,
+        name: str | None,
+        capacity: int | None,
+        description: str | None
+):
+    room = db.get(Room, room_id)
+
+    if room is None:
+        return None
+
+    if name: room.name = name
+    if capacity: room.capacity = capacity
+    if description: room.description = description
+
+    db.commit()
+    db.refresh(room)
+
+    return room
+
+
 # db = SessionLocal()
 # try:
-#     room = create_room(db, name="Games", capacity=5, description="Thissidadgselmsefl")
-#     rooms = get_rooms(db, 100, 0)
+#     room = delete_room_by_id(db, 3)
 # finally:
 #     db.close()
 
-# for room in rooms:
-#     print(
-#         room.id,
-#         room.name,
-#         room.capacity,
-#         room.description
-#     )
-
-# print(room.description)
+# if room is None:
+#     print("нет")
+# else:
+#     print(room.name)
