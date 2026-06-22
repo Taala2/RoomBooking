@@ -1,11 +1,4 @@
-from pydantic import BaseModel, Field
-
-
-class RoomReponse(BaseModel):
-    id: int
-    name: str = Field(min_length=3, max_length=255)
-    capacity: int
-    description: str | None
+from pydantic import BaseModel, ConfigDict, Field
 
 class RoomRequest(BaseModel):
     name: str = Field(min_length=3, max_length=255)

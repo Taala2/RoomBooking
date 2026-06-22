@@ -1,7 +1,9 @@
+from typing import List
 from sqlalchemy import String, Text
 
+from bookings.models import Booking
 from core.database import Base
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 
 class Room(Base):
@@ -11,3 +13,5 @@ class Room(Base):
     name: Mapped[str] = mapped_column(String(255), nullable=False)
     capacity: Mapped[int]
     description: Mapped[str] = mapped_column(Text, nullable=True)
+
+    bookings: Mapped[List["Booking"]] = relationship(back_populates="room")

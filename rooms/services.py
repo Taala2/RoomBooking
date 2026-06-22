@@ -1,54 +1,46 @@
-from sqlalchemy import delete, func, select
+from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
-from core.database import SessionLocal
 from rooms.models import Room
+from rooms.repository import count_rooms, create_room, delete_room, get_room_by_id, get_rooms, update_room
 
-def create_room(db: Session, name: str, capacity: int, description: str | None):
-    room = Room(
-        name=name,
-        capacity=capacity,
-        description=description
+def create_room_service(db: Session, name: str, capacity: int, description: str | None):
+    return create_room(
+        db=db,
+        room=Room(
+            name=name,
+            capacity=capacity,
+            description=description
+        )
     )
 
-    db.add(room)
-    db.commit()
-    db.refresh(room)
-    return room
+def get_room_service(db: Session, room_id: int):
+    return get_room_by_id(db, room_id)
 
-def get_room_by_id(db: Session, room_id: int):
-    return db.get(Room, room_id)
+def get_rooms_service(db: Session, limit: int, offset: int):
+    return get_rooms(db, limit, offset)
 
-def get_rooms(db: Session, limit: int, offset: int):
-    stmt = (
-        select(Room)
-        .offset(offset)
-        .limit(limit)
-    )
-    return list(db.scalars(stmt).all())
+def count_rooms_service(db: Session):
+    return count_rooms(db)
 
-def count_rooms(db: Session):
-    stmt = select(func.count()).select_from(Room)
+def delete_room_service(db: Session, room_id: int):
+    room = get_room_by_id(db, room_id)
 
-    return db.scalar(stmt) or 0
+    if room is None:
+        return None
 
-def delete_room_by_id(db: Session, room_id: int):
-    room = db.get(Room, room_id)
+    delete_room(db, room)
 
-    if room:
-        db.delete(room)
-        db.commit()
+    return True
 
-    return room
-
-def update_room_by_id(
+def update_room_service(
         db: Session,
         room_id: int,
         name: str | None,
         capacity: int | None,
         description: str | None
 ):
-    room = db.get(Room, room_id)
+    room = get_room_by_id(db, room_id)
 
     if room is None:
         return None
@@ -57,8 +49,7 @@ def update_room_by_id(
     if capacity: room.capacity = capacity
     if description: room.description = description
 
-    db.commit()
-    db.refresh(room)
+    update_room(db, room)
 
     return room
 
