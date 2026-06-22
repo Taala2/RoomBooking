@@ -5,49 +5,39 @@ from core.database import get_db
 from core.security import Current_admin, Current_user, create_access_token
 
 from users.schemas import ChangeUserRoleRequest, ChangeUserRoleRespone, TokenResponse, UserAuthenticateRequest, UserCreateRequest, UserCreateResponse, UserResponse
-from users.services import authenticate_user, change_user_by_id, create_user, get_user_by_register
+from users.services import authenticate_user, change_user_role, register_user
 
 router = APIRouter(prefix="/users", tags=["users"])
 
 @router.post("/auth/register", response_model=UserCreateResponse, status_code=status.HTTP_201_CREATED)
-def register_user(user: UserCreateRequest, db: Session = Depends(get_db)):
-    existing_user = get_user_by_register(
-        db=db,
-        login=user.login,
-        email=user.email
-    )
-
-    if existing_user:
-        if existing_user.email == user.email:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Почта занят"
-            )
-
-        else:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Логин занят"
-            )
-
-    new_user_obj = create_user(
+def register(user: UserCreateRequest, db: Session = Depends(get_db)):
+    new_user = register_user(
         db=db,
         login=user.login,
         email=user.email,
         password=user.password
     )
 
-    return new_user_obj
+    if new_user is None:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Логин или почта занят"
+        )
+
+    return new_user
 
 @router.post("/auth/login", response_model=TokenResponse)
-def login_user(auth_data: UserAuthenticateRequest, db: Session = Depends(get_db)):
+def login(auth_data: UserAuthenticateRequest, db: Session = Depends(get_db)):
     user = authenticate_user(
         db=db,
         login_or_email=auth_data.login_or_email,
         password=auth_data.password)
 
     if not user:
-        raise HTTPException(status_code=401, detail="Пользователь не найден")
+        raise HTTPException(
+            status_code=401,
+            detail="Пользователь не найден"
+        )
 
     token = create_access_token(user_id=str(user.id))
 
@@ -75,20 +65,20 @@ def change_role(
             detail="Нельзя поменять свои права"
         )
 
-    res = change_user_by_id(
+    upd_user = change_user_role(
         db=db,
         user_id=user_id,
         role=role.role
     )
 
-    if res is None:
+    if upd_user is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Пользователь не найден"
         )
 
     return ChangeUserRoleRespone(
-        id=res.id,
-        login=res.login,
-        role=res.role
+        id=upd_user.id,
+        login=upd_user.login,
+        role=upd_user.role
     )
