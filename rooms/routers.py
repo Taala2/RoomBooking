@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 
 from core.database import get_db
-from core.security import Current_admin
+from core.dependencies import Current_admin
 from rooms.schemas import ListRoomResponse, RoomChangeRequest, RoomRequest, RoomResponse
 from rooms.services import count_rooms_service, create_room_service, delete_room_service, get_room_service, get_rooms_service, update_room_service
 
