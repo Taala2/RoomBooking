@@ -6,7 +6,7 @@ from users.repository import create, get_by_id, get_user_by_login_or_email, upda
 from users.schemas import UserRole
 
 
-def register_user(db: Session, login: str, email: str, password: str):
+def create_user_service(db: Session, login: str, email: str, password: str):
     user = get_user_by_login_or_email(db, login, email)
     if user:
         return None
@@ -17,7 +17,7 @@ def register_user(db: Session, login: str, email: str, password: str):
 
     return create(db, new_user)
 
-def authenticate_user(db: Session, login_or_email: str, password: str):
+def authenticate_user_service(db: Session, login_or_email: str, password: str):
     user = get_user_by_login_or_email(db, login_or_email, login_or_email)
 
     if not user:
@@ -28,7 +28,7 @@ def authenticate_user(db: Session, login_or_email: str, password: str):
 
     return user
 
-def change_user_role(db: Session, user_id: int, role: UserRole):
+def change_user_role_service(db: Session, user_id: int, role: UserRole):
     user = get_by_id(db, user_id)
 
     if not user:

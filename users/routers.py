@@ -5,13 +5,13 @@ from core.database import get_db
 from core.security import Current_admin, Current_user, create_access_token
 
 from users.schemas import ChangeUserRoleRequest, ChangeUserRoleRespone, TokenResponse, UserAuthenticateRequest, UserCreateRequest, UserCreateResponse, UserResponse
-from users.services import authenticate_user, change_user_role, register_user
+from users.services import authenticate_user_service, change_user_role_service, create_user_service
 
 router = APIRouter(prefix="/users", tags=["users"])
 
 @router.post("/auth/register", response_model=UserCreateResponse, status_code=status.HTTP_201_CREATED)
-def register(user: UserCreateRequest, db: Session = Depends(get_db)):
-    new_user = register_user(
+def register_router(user: UserCreateRequest, db: Session = Depends(get_db)):
+    new_user = create_user_service(
         db=db,
         login=user.login,
         email=user.email,
@@ -27,8 +27,8 @@ def register(user: UserCreateRequest, db: Session = Depends(get_db)):
     return new_user
 
 @router.post("/auth/login", response_model=TokenResponse)
-def login(auth_data: UserAuthenticateRequest, db: Session = Depends(get_db)):
-    user = authenticate_user(
+def login_router(auth_data: UserAuthenticateRequest, db: Session = Depends(get_db)):
+    user = authenticate_user_service(
         db=db,
         login_or_email=auth_data.login_or_email,
         password=auth_data.password)
@@ -44,7 +44,7 @@ def login(auth_data: UserAuthenticateRequest, db: Session = Depends(get_db)):
     return TokenResponse(access_token=token)
 
 @router.get("/me", response_model=UserResponse)
-def profile_user(user: Current_user):
+def profile_router(user: Current_user):
     return UserResponse(
         id=user.id,
         login=user.login,
@@ -53,7 +53,7 @@ def profile_user(user: Current_user):
     )
 
 @router.patch("/{user_id}/role", response_model=ChangeUserRoleRespone)
-def change_role(
+def change_role_router(
     user_id: int,
     role: ChangeUserRoleRequest,
     current_user: Current_admin,
@@ -65,7 +65,7 @@ def change_role(
             detail="Нельзя поменять свои права"
         )
 
-    upd_user = change_user_role(
+    upd_user = change_user_role_service(
         db=db,
         user_id=user_id,
         role=role.role
