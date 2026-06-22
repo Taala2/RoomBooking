@@ -44,12 +44,7 @@ def login_router(auth_data: UserAuthenticateRequest, db: Session = Depends(get_d
 
 @router.get("/me", response_model=UserResponse)
 def profile_router(user: Current_user):
-    return UserResponse(
-        id=user.id,
-        login=user.login,
-        email=user.email,
-        role=user.role
-    )
+    return user
 
 @router.patch("/{user_id}/role", response_model=ChangeUserRoleRespone)
 def change_role_router(
@@ -58,14 +53,9 @@ def change_role_router(
     current_user: Current_admin,
     db: Session = Depends(get_db)
 ):
-    if current_user.id == user_id:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Нельзя поменять свои права"
-        )
-
     upd_user = change_user_role_service(
         db=db,
+        current_user=current_user,
         user_id=user_id,
         role=role.role
     )
@@ -73,11 +63,7 @@ def change_role_router(
     if upd_user is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="Пользователь не найден"
+            detail="Пользователь не найден или вы не можете поменять свою роль"
         )
 
-    return ChangeUserRoleRespone(
-        id=upd_user.id,
-        login=upd_user.login,
-        role=upd_user.role
-    )
+    return upd_user

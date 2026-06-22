@@ -28,12 +28,15 @@ def authenticate_user_service(db: Session, login_or_email: str, password: str):
 
     return user
 
-def change_user_role_service(db: Session, user_id: int, role: UserRole):
+def change_user_role_service(db: Session, current_user: User, user_id: int, role: UserRole):
     user = get_by_id(db, user_id)
 
     if not user:
         return None
 
+    if current_user.role == user.role:
+        return None
+    
     user.role = role
 
     return update(db, user)

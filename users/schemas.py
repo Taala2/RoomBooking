@@ -43,5 +43,9 @@ class ChangeUserRoleRespone(BaseModel):
     login: str = Field(min_length=3, max_length=255)
     role: UserRole
 
+    model_config = ConfigDict(
+        from_attributes=True
+    )
+
 class ChangeUserRoleRequest(BaseModel):
     role: UserRole
