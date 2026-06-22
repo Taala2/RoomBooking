@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 from users.models import User
 
 
-def get_by_id(db: Session, user_id: int):
+def get_user_by_id(db: Session, user_id: int):
     user = db.get(User, user_id)
     return user
 
@@ -18,17 +18,17 @@ def get_user_by_login_or_email(db: Session, login: str, email: str):
 
     return user
 
-def create(db: Session, user: User):
+def create_user(db: Session, user: User):
     db.add(user)
     db.commit()
     db.refresh(user)
     return user
 
-def update(db: Session, user: User):
+def update_user(db: Session, user: User):
     db.commit()
     db.refresh(user)
     return user
 
-def delete(db: Session, user: User) -> None:
+def delete_user(db: Session, user: User) -> None:
     db.delete(user)
     db.commit()
