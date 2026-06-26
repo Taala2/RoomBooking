@@ -1,8 +1,6 @@
-from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy.orm import Session
+from fastapi import APIRouter, HTTPException, status
 
-from core.database import get_db
-from core.dependencies import Current_admin, Current_user
+from core.dependencies import Current_admin, Current_session, Current_user
 from core.security import create_access_token
 from users.schemas import ChangeUserRoleRequest, ChangeUserRoleRespone, TokenResponse, UserAuthenticateRequest, UserCreateRequest, UserCreateResponse, UserResponse
 from users.services import authenticate_user_service, change_user_role_service, create_user_service
@@ -10,7 +8,7 @@ from users.services import authenticate_user_service, change_user_role_service, 
 router = APIRouter(prefix="/users", tags=["users"])
 
 @router.post("/auth/register", response_model=UserCreateResponse, status_code=status.HTTP_201_CREATED)
-def register_router(user: UserCreateRequest, db: Session = Depends(get_db)):
+def register_router(user: UserCreateRequest, db: Current_session):
     new_user = create_user_service(
         db=db,
         login=user.login,
@@ -27,7 +25,7 @@ def register_router(user: UserCreateRequest, db: Session = Depends(get_db)):
     return new_user
 
 @router.post("/auth/login", response_model=TokenResponse)
-def login_router(auth_data: UserAuthenticateRequest, db: Session = Depends(get_db)):
+def login_router(auth_data: UserAuthenticateRequest, db: Current_session):
     user = authenticate_user_service(
         db=db,
         login_or_email=auth_data.login_or_email,
@@ -52,7 +50,7 @@ def change_role_router(
     user_id: int,
     role: ChangeUserRoleRequest,
     current_user: Current_admin,
-    db: Session = Depends(get_db)
+    db: Current_session
 ):
     upd_user = change_user_role_service(
         db=db,

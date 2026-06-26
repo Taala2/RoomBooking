@@ -1,8 +1,6 @@
-from fastapi import APIRouter, Depends, HTTPException, Query, status
-from sqlalchemy.orm import Session
+from fastapi import APIRouter, HTTPException, Query, status
 
-from core.database import get_db
-from core.dependencies import Current_admin
+from core.dependencies import Current_admin, Current_session
 from rooms.schemas import ListRoomResponse, RoomChangeRequest, RoomRequest, RoomResponse
 from rooms.services import count_rooms_service, create_room_service, delete_room_service, get_room_service, get_rooms_service, update_room_service
 
@@ -10,7 +8,7 @@ from rooms.services import count_rooms_service, create_room_service, delete_room
 router = APIRouter(prefix="/rooms", tags=["rooms"])
 
 @router.post("/create", response_model=RoomResponse)
-def create_room_router(_: Current_admin, room: RoomRequest, db: Session = Depends(get_db)):
+def create_room_router(_: Current_admin, room: RoomRequest, db: Current_session):
     new_room = create_room_service(
         db=db,
         name=room.name,
@@ -22,9 +20,9 @@ def create_room_router(_: Current_admin, room: RoomRequest, db: Session = Depend
 
 @router.get("/list", response_model=ListRoomResponse)
 def list_rooms_router(
+    db: Current_session,
     limit: int = Query(default=20, ge=1, le=100),
     offset: int = Query(default=0, ge=0),
-    db: Session = Depends(get_db)
 ):
     rooms = get_rooms_service(
         db=db,
@@ -42,7 +40,7 @@ def list_rooms_router(
     }
 
 @router.get("/{room_id}", response_model=RoomResponse)
-def get_room_router(room_id: int, db: Session = Depends(get_db)):
+def get_room_router(room_id: int, db: Current_session):
     room = get_room_service(db, room_id)
 
     if room is None:
@@ -55,7 +53,7 @@ def change_room_router(
     _: Current_admin,
     room_id: int,
     room: RoomChangeRequest,
-    db: Session = Depends(get_db)
+    db: Current_session
 ):
     upd_room = update_room_service(
         db=db,
@@ -74,7 +72,7 @@ def change_room_router(
     return upd_room
 
 @router.delete("delete/{room_id}")
-def delete_room(room_id: int, db: Session = Depends(get_db)):
+def delete_room(room_id: int, db: Current_session):
     del_room = delete_room_service(db, room_id)
 
     if del_room is None:

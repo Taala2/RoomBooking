@@ -61,3 +61,8 @@ Current_admin = Annotated[
     User,
     Depends(get_current_admin)
 ]
+
+Current_session = Annotated[
+    Session,
+    Depends(get_db)
+]

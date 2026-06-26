@@ -1,9 +1,7 @@
-from fastapi import APIRouter, Depends
-from sqlalchemy.orm import Session
+from fastapi import APIRouter
 
 from bookings.schemas import BookingRequest
 from bookings.services import create_booking_service
-from core.database import get_db
 from core.dependencies import Current_session, Current_user
 
 

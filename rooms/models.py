@@ -1,7 +1,6 @@
 from typing import List
 from sqlalchemy import String, Text
 
-from bookings.models import Booking
 from core.database import Base
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 

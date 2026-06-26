@@ -1,4 +1,3 @@
-from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from rooms.models import Room
@@ -49,9 +48,7 @@ def update_room_service(
     if capacity: room.capacity = capacity
     if description: room.description = description
 
-    update_room(db, room)
-
-    return room
+    return update_room(db, room)
 
 
 # db = SessionLocal()

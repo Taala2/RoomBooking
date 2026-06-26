@@ -1,4 +1,4 @@
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, Field
 
 class RoomRequest(BaseModel):
     name: str = Field(min_length=3, max_length=255)
