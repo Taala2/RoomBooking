@@ -2,7 +2,7 @@ from datetime import datetime
 from sqlalchemy import DateTime, Enum, ForeignKey, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from bookings.schemas import BookingStatus
+from bookings.bookings_schemas import BookingStatus
 from core.database import Base
 
 

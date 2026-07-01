@@ -3,8 +3,8 @@ from datetime import datetime
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from bookings.models import Booking
-from bookings.schemas import BookingStatus
+from bookings.bookings_models import Booking
+from bookings.bookings_schemas import BookingStatus
 
 
 def get_booking_by_id(db: Session, booking_id: int):

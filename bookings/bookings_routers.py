@@ -1,7 +1,7 @@
 from fastapi import APIRouter
 
-from bookings.schemas import BookinTimeChangeRequest, BookingCancelRequest, BookingRequest, BookingResponse
-from bookings.services import cancel_booking_service, change_booking_time_service, create_booking_service, get_my_booking_service
+from bookings.bookings_schemas import BookinTimeChangeRequest, BookingCancelRequest, BookingRequest, BookingResponse
+from bookings.bookings_services import cancel_booking_service, change_booking_time_service, create_booking_service, get_my_booking_service
 from core.dependencies import Current_session, Current_user
 
 
