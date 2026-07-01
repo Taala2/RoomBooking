@@ -42,9 +42,11 @@ def get_conflict_booking(
             Booking.status == BookingStatus.ACTIVE,
             Booking.start_time < end_time,
             Booking.end_time > start_time
-        )
+    )
 
     if exclude_booking_id:
         stmt = stmt.where(Booking.id != exclude_booking_id)
 
-    return db.execute(stmt).scalar_one_or_none()
+    result = db.execute(stmt).scalar_one_or_none()
+
+    return result

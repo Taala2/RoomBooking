@@ -1,7 +1,9 @@
 from sqlalchemy.orm import Session
 
+from core.exceptions import RoomNotFoundError
 from rooms.models import Room
 from rooms.repository import count_rooms, create_room, delete_room, get_room_by_id, get_rooms, update_room
+
 
 def create_room_service(db: Session, name: str, capacity: int, description: str | None):
     return create_room(
@@ -25,8 +27,8 @@ def count_rooms_service(db: Session):
 def delete_room_service(db: Session, room_id: int):
     room = get_room_by_id(db, room_id)
 
-    if room is None:
-        return None
+    if not room:
+        raise RoomNotFoundError("Комната не найдено")
 
     delete_room(db, room)
 
@@ -41,23 +43,11 @@ def update_room_service(
 ):
     room = get_room_by_id(db, room_id)
 
-    if room is None:
-        return None
+    if not room:
+        raise RoomNotFoundError("Комната не найдено")
 
     if name: room.name = name
     if capacity: room.capacity = capacity
     if description: room.description = description
 
     return update_room(db, room)
-
-
-# db = SessionLocal()
-# try:
-#     room = delete_room_by_id(db, 3)
-# finally:
-#     db.close()
-
-# if room is None:
-#     print("нет")
-# else:
-#     print(room.name)

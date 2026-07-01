@@ -14,9 +14,7 @@ def get_user_by_login_or_email(db: Session, login: str, email: str):
         User.email == email
     ))
 
-    user = db.execute(stmt).scalar_one_or_none()
-
-    return user
+    return db.execute(stmt).scalar_one_or_none()
 
 def create_user(db: Session, user: User):
     db.add(user)

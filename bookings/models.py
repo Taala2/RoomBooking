@@ -5,6 +5,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from bookings.schemas import BookingStatus
 from core.database import Base
 
+
 class Booking(Base):
     __tablename__ = "bookings"
 

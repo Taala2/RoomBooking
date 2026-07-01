@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException, Query, status
+from fastapi import APIRouter, Query
 
 from core.dependencies import Current_admin, Current_session
 from rooms.schemas import ListRoomResponse, RoomChangeRequest, RoomRequest, RoomResponse
@@ -43,42 +43,26 @@ def list_rooms_router(
 def get_room_router(room_id: int, db: Current_session):
     room = get_room_service(db, room_id)
 
-    if room is None:
-        raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Комната не найдено")
-
     return room
 
 @router.patch("/change/{room_id}", response_model=RoomResponse)
 def change_room_router(
     _: Current_admin,
-    room_id: int,
     room: RoomChangeRequest,
     db: Current_session
 ):
     upd_room = update_room_service(
         db=db,
-        room_id=room_id,
+        room_id=room.room_id,
         name=room.name,
         capacity=room.capacity,
         description=room.description
     )
-
-    if upd_room is None:
-        raise HTTPException(
-            status.HTTP_404_NOT_FOUND,
-            detail="Комната не найдено"
-        )
 
     return upd_room
 
 @router.delete("delete/{room_id}")
 def delete_room(room_id: int, db: Current_session):
     del_room = delete_room_service(db, room_id)
-
-    if del_room is None:
-        raise HTTPException(
-            status.HTTP_404_NOT_FOUND,
-            detail="Комната не найдено"
-        )
 
     return del_room

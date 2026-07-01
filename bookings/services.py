@@ -5,6 +5,7 @@ from sqlalchemy.orm import Session
 from bookings.models import Booking
 from bookings.repository import create_booking, get_booking_by_id, get_booking_by_user_id, get_conflict_booking, update_booking
 from bookings.schemas import BookingStatus
+from core.exceptions import BookingAccessDeniedError, BookingAlreadyCanceledError, BookingConflictError, BookingNotFoundError, InvalidBookingTimeError, RoomNotFoundError
 from rooms.repository import get_room_by_id
 
 
@@ -15,13 +16,12 @@ def create_booking_service(
         start_time: datetime,
         end_time: datetime
 ):
-    if not validate_time(start_time, end_time):
-        return None
+    validate_time(start_time, end_time)
 
     room = get_room_by_id(db, room_id)
 
     if not room:
-        return None
+        raise RoomNotFoundError("Комната не найдено")
 
     conflict_booking = get_conflict_booking(
         db=db,
@@ -31,8 +31,7 @@ def create_booking_service(
     )
 
     if conflict_booking:
-        return None
-
+        raise BookingConflictError("На введенное время текущая комната занята")
 
     new_booking = Booking(
         user_id=user_id,
@@ -49,12 +48,6 @@ def get_my_booking_service(db: Session, user_id: int):
 def cancel_booking_service(db: Session, user_id: int, booking_id: int):
     booking = get_user_booking(db, user_id, booking_id)
 
-    if not booking:
-        return None
-
-    if booking.status == BookingStatus.CANCELED:
-        return None
-
     booking.status = BookingStatus.CANCELED
 
     return update_booking(db, booking)
@@ -68,14 +61,7 @@ def change_booking_time_service(
 ):
     booking = get_user_booking(db, user_id, booking_id)
 
-    if not booking:
-        return None
-
-    if not validate_time(start_time, end_time):
-        return None
-
-    if booking.status == BookingStatus.CANCELED:
-        return None
+    validate_time(start_time, end_time)
 
     conflict = get_conflict_booking(
         db=db,
@@ -86,7 +72,7 @@ def change_booking_time_service(
     )
 
     if conflict:
-        return None
+        raise BookingConflictError("На введенное время текущая комната занята")
 
     booking.start_time = start_time
     booking.end_time = end_time
@@ -95,25 +81,26 @@ def change_booking_time_service(
 
 def validate_time(start_time: datetime, end_time: datetime):
     if start_time >= end_time:
-        return False
+        raise InvalidBookingTimeError("Время окончания должно быть позже времени начала")
 
     if start_time < datetime.now(UTC):
-        return False
+        raise InvalidBookingTimeError("Нельзя бронировать время в прошлом")
 
     duration = end_time - start_time
 
     if duration > timedelta(hours=5):
-        return False
-
-    return True
+        raise InvalidBookingTimeError("Максимальная длительность бронирования — 5 часов")
 
 def get_user_booking(db: Session, user_id: int, booking_id: int):
     booking = get_booking_by_id(db, booking_id)
 
     if not booking:
-        return None
+        raise BookingNotFoundError("Бронь не найдено")
 
     if booking.user_id != user_id:
-        return None
+        raise BookingAccessDeniedError("У вас нет доступа к этой брони")
+
+    if booking.status == BookingStatus.CANCELED:
+        raise BookingAlreadyCanceledError("Бронь уже отменен")
 
     return booking
