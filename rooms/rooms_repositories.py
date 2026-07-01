@@ -1,7 +1,7 @@
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
-from rooms.models import Room
+from rooms.rooms_models import Room
 
 
 def get_room_by_id(db: Session, room_id: int):

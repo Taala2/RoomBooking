@@ -1,8 +1,8 @@
 from sqlalchemy.orm import Session
 
 from core.exceptions import RoomNotFoundError
-from rooms.models import Room
-from rooms.repository import count_rooms, create_room, delete_room, get_room_by_id, get_rooms, update_room
+from rooms.rooms_models import Room
+from rooms.rooms_repositories import count_rooms, create_room, delete_room, get_room_by_id, get_rooms, update_room
 
 
 def create_room_service(db: Session, name: str, capacity: int, description: str | None):

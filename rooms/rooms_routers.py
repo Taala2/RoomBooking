@@ -1,8 +1,8 @@
 from fastapi import APIRouter, Query
 
 from core.dependencies import Current_admin, Current_session
-from rooms.schemas import ListRoomResponse, RoomChangeRequest, RoomRequest, RoomResponse
-from rooms.services import count_rooms_service, create_room_service, delete_room_service, get_room_service, get_rooms_service, update_room_service
+from rooms.rooms_schemas import ListRoomResponse, RoomChangeRequest, RoomRequest, RoomResponse
+from rooms.rooms_services import count_rooms_service, create_room_service, delete_room_service, get_room_service, get_rooms_service, update_room_service
 
 
 router = APIRouter(prefix="/rooms", tags=["rooms"])
