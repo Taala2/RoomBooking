@@ -6,9 +6,9 @@ import jwt
 
 from core.database import get_db
 from core.security import ALGORITHM, SECRET_KEY
-from users.models import User
-from users.repository import get_user_by_id
-from users.schemas import UserRole
+from users.users_models import User
+from users.users_repositories import get_user_by_id
+from users.users_schemas import UserRole
 
 
 security = HTTPBearer()

@@ -2,9 +2,9 @@ from sqlalchemy.orm import Session
 
 from core.exceptions import AdminCannotDemoteSelfError, EmailAlreadyExistsError, IncorrectPasswordError, UserNotFoundError, UsernameAlreadyExistsError
 from core.security import hash_password, verify_password
-from users.models import User
-from users.repository import create_user, get_user_by_id, get_user_by_login_or_email, update_user
-from users.schemas import UserRole
+from users.users_models import User
+from users.users_repositories import create_user, get_user_by_id, get_user_by_login_or_email, update_user
+from users.users_schemas import UserRole
 
 
 def create_user_service(db: Session, login: str, email: str, password: str):

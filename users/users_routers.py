@@ -2,8 +2,8 @@ from fastapi import APIRouter, status
 
 from core.dependencies import Current_admin, Current_session, Current_user
 from core.security import create_access_token
-from users.schemas import ChangeUserRoleRequest, ChangeUserRoleRespone, TokenResponse, UserAuthenticateRequest, UserCreateRequest, UserCreateResponse, UserResponse
-from users.services import authenticate_user_service, change_user_role_service, create_user_service
+from users.users_schemas import ChangeUserRoleRequest, ChangeUserRoleRespone, TokenResponse, UserAuthenticateRequest, UserCreateRequest, UserCreateResponse, UserResponse
+from users.users_services import authenticate_user_service, change_user_role_service, create_user_service
 
 
 router = APIRouter(prefix="/users", tags=["users"])

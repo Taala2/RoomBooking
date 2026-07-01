@@ -1,7 +1,7 @@
 from sqlalchemy import or_, select
 from sqlalchemy.orm import Session
 
-from users.models import User
+from users.users_models import User
 
 
 def get_user_by_id(db: Session, user_id: int):
