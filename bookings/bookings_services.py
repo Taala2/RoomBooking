@@ -6,7 +6,7 @@ from bookings.bookings_models import Booking
 from bookings.bookings_repositories import create_booking, get_booking_by_id, get_booking_by_user_id, get_conflict_booking, update_booking
 from bookings.bookings_schemas import BookingStatus
 from core.exceptions import BookingAccessDeniedError, BookingAlreadyCanceledError, BookingConflictError, BookingNotFoundError, InvalidBookingTimeError, RoomNotFoundError
-from rooms.repository import get_room_by_id
+from rooms.rooms_repositories import get_room_by_id
 
 
 def create_booking_service(
