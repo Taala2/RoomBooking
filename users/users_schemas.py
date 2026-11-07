@@ -7,7 +7,8 @@ class UserRole(str, Enum):
     ADMIN = 'admin'
 
 class UserCreateRequest(BaseModel):
-    login: str = Field(min_length=3, max_length=255)
+    # "@" is reserved for emails: login and email share one input on sign-in.
+    login: str = Field(min_length=3, max_length=255, pattern=r"^[^@]+$")
     email: EmailStr = Field(min_length=3, max_length=255)
     password: str = Field(min_length=8, max_length=255)
 

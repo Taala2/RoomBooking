@@ -26,8 +26,8 @@ def user_not_found_handler(
         exc: UserNotFoundError
 ):
     return JSONResponse(
-        status_code=status.HTTP_401_UNAUTHORIZED,
-        content={"detail": "Неверный логин или пароль"}
+        status_code=status.HTTP_404_NOT_FOUND,
+        content={"detail": str(exc)}
     )
 
 def incorrect_password_handler(
