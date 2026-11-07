@@ -1,12 +1,9 @@
 from fastapi import FastAPI
 
-from core.database import Base, engine
 from core.handlers import register_exception_handlers
 from users.users_routers import router as users_router
 from rooms.rooms_routers import router as rooms_router
 from bookings.bookings_routers import router as bookings_router
-
-Base.metadata.create_all(engine)
 
 app = FastAPI()
 
