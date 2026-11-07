@@ -1,8 +1,18 @@
 # RoomBooking
 
-REST API для бронирования переговорных комнат. Пользователи бронируют комнату на интервал времени, отменяют и переносят свои брони; администраторы управляют комнатами и ролями.
+Система бронирования переговорных комнат: REST API на FastAPI и веб-интерфейс на React. Пользователи бронируют комнату на интервал времени, отменяют и переносят свои брони; администраторы управляют комнатами и ролями.
 
-Главная задача проекта — **гарантировать, что одну комнату нельзя забронировать дважды на пересекающееся время**, в том числе при одновременных запросах. Как это сделано — в разделе [«Как решена гонка при бронировании»](#как-решена-гонка-при-бронировании).
+Главная задача проекта — **гарантировать, что одну комнату нельзя забронировать дважды на пересекающееся время**, в том числе при одновременных запросах. Как это сделано — в разделе [«Как решена гонка при бронировании»](#как-решена-гонка-при-бронировании). Темы для защиты и собеседования — в [`docs/defense-notes.md`](docs/defense-notes.md).
+
+## Скриншоты
+
+| Список комнат | Расписание комнаты и бронь |
+|---|---|
+| ![Список комнат](docs/screenshots/rooms.png) | ![Расписание на день, занятые интервалы и отказ при пересечении](docs/screenshots/room-schedule.png) |
+
+| Мои брони: перенос и отмена | Администратор: управление комнатами |
+|---|---|
+| ![Мои брони](docs/screenshots/my-bookings.png) | ![Управление комнатами](docs/screenshots/admin-rooms.png) |
 
 ## Стек
 
@@ -193,6 +203,37 @@ ALTER TABLE bookings ADD CONSTRAINT bookings_no_overlap
 - `40P01 deadlock_detected` — две пересекающиеся вставки одновременно ждут друг друга, и PostgreSQL прерывает одну из них. Тест гонки ловил это примерно в половине прогонов; других блокировок у таблицы броней нет, поэтому deadlock здесь означает именно пересечение.
 
 ## База данных и миграции
+
+```mermaid
+erDiagram
+    users ||--o{ bookings : "бронирует"
+    rooms ||--o{ bookings : "бронируется"
+
+    users {
+        int id PK
+        varchar login UK "без @"
+        varchar email UK "в нижнем регистре"
+        varchar hashed_password "bcrypt"
+        userrole role "USER или ADMIN"
+    }
+    rooms {
+        int id PK
+        varchar name
+        int capacity "1-100"
+        text description "может быть NULL"
+    }
+    bookings {
+        int id PK
+        int user_id FK "индекс"
+        int room_id FK "ON DELETE CASCADE"
+        timestamptz start_time
+        timestamptz end_time
+        bookingstatus status "ACTIVE или CANCELED"
+        timestamptz created_at
+    }
+```
+
+Кроме ключей, на `bookings` действует ограничение `bookings_no_overlap`: `EXCLUDE USING gist (room_id WITH =, tstzrange(start_time, end_time, '[)') WITH &&) WHERE (status = 'ACTIVE')` — две активные брони одной комнаты не могут пересекаться по времени.
 
 Схема создаётся и меняется только через Alembic (`Base.metadata.create_all` не используется).
 
