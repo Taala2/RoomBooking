@@ -113,12 +113,12 @@ def get_user_booking(db: Session, user_id: int, booking_id: int):
     booking = get_booking_by_id(db, booking_id)
 
     if not booking:
-        raise BookingNotFoundError("Бронь не найдено")
+        raise BookingNotFoundError("Бронь не найдена")
 
     if booking.user_id != user_id:
         raise BookingAccessDeniedError("У вас нет доступа к этой брони")
 
     if booking.status == BookingStatus.CANCELED:
-        raise BookingAlreadyCanceledError("Бронь уже отменен")
+        raise BookingAlreadyCanceledError("Бронь уже отменена")
 
     return booking

@@ -1,13 +1,13 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, status
 
-from bookings.bookings_schemas import BookinTimeChangeRequest, BookingCancelRequest, BookingRequest, BookingResponse
+from bookings.bookings_schemas import BookingCancelRequest, BookingRequest, BookingResponse, BookingTimeChangeRequest
 from bookings.bookings_services import cancel_booking_service, change_booking_time_service, create_booking_service, get_my_booking_service
 from core.dependencies import Current_session, Current_user
 
 
 router = APIRouter(prefix="/bookings", tags=["bookings"])
 
-@router.post("/", response_model=BookingResponse)
+@router.post("/", response_model=BookingResponse, status_code=status.HTTP_201_CREATED)
 def booking_rooms_router(
     current_user: Current_user,
     booking: BookingRequest,
@@ -23,11 +23,11 @@ def booking_rooms_router(
 
     return new_booking
 
-@router.get("/")
+@router.get("/", response_model=list[BookingResponse])
 def get_bookings_router(current_user: Current_user, db: Current_session):
     return get_my_booking_service(db, current_user.id)
 
-@router.post("/cancel")
+@router.post("/cancel", response_model=BookingResponse)
 def cancel_booking_router(
     current_user: Current_user,
     booking_id: BookingCancelRequest,
@@ -37,10 +37,10 @@ def cancel_booking_router(
 
     return booking
 
-@router.post("/change")
+@router.post("/change", response_model=BookingResponse)
 def change_booking_router(
     current_user: Current_user,
-    booking_change: BookinTimeChangeRequest,
+    booking_change: BookingTimeChangeRequest,
     db: Current_session
 ):
     booking = change_booking_time_service(

@@ -11,7 +11,7 @@ def get_booking_by_id(db: Session, booking_id: int):
     return db.get(Booking, booking_id)
 
 def get_booking_by_user_id(db: Session, user_id: int):
-    stmt = select(Booking).where(Booking.user_id==user_id)
+    stmt = select(Booking).where(Booking.user_id==user_id).order_by(Booking.start_time)
     return db.execute(stmt).scalars().all()
 
 def create_booking(db: Session, booking: Booking):
