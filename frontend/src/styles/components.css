@@ -1,0 +1,382 @@
+/* Reusable UI pieces: cards, buttons, form fields, badges, messages, tables. */
+
+.card {
+  padding: 20px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+}
+
+.card-header {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.card-header p {
+  margin-top: 2px;
+}
+
+.stack {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.icon-tile {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  color: var(--primary);
+  background: var(--primary-soft);
+  border-radius: 10px;
+}
+
+/* Buttons: default / hover / active / disabled / loading */
+
+.button {
+  display: inline-flex;
+  gap: 6px;
+  align-items: center;
+  justify-content: center;
+  height: 38px;
+  padding: 0 14px;
+  font: inherit;
+  font-weight: 500;
+  color: var(--text);
+  white-space: nowrap;
+  cursor: pointer;
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  transition: background-color 0.15s, border-color 0.15s, color 0.15s;
+}
+
+.button:hover:not(:disabled) {
+  background: var(--surface-hover);
+}
+
+.button:active:not(:disabled) {
+  background: var(--border);
+}
+
+.button:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.button[aria-busy='true'] {
+  cursor: progress;
+  opacity: 0.8;
+}
+
+.button-primary {
+  color: #ffffff;
+  background: var(--primary);
+  border-color: var(--primary);
+}
+
+.button-primary:hover:not(:disabled) {
+  background: var(--primary-hover);
+  border-color: var(--primary-hover);
+}
+
+.button-primary:active:not(:disabled) {
+  background: var(--primary-active);
+  border-color: var(--primary-active);
+}
+
+.button-danger {
+  color: var(--error-text);
+  border-color: var(--border-strong);
+}
+
+.button-danger:hover:not(:disabled) {
+  background: var(--error-soft);
+  border-color: var(--error);
+}
+
+.button-danger:active:not(:disabled) {
+  background: rgba(220, 82, 82, 0.18);
+}
+
+.button-ghost {
+  color: var(--text-secondary);
+  background: transparent;
+  border-color: transparent;
+}
+
+.button-ghost:hover:not(:disabled) {
+  color: var(--text);
+  background: var(--surface-hover);
+}
+
+.button-sm {
+  height: 32px;
+  padding: 0 10px;
+  font-size: var(--font-small);
+}
+
+.button-icon {
+  width: 38px;
+  padding: 0;
+}
+
+.button-block {
+  width: 100%;
+}
+
+.spinner {
+  animation: spin 0.8s linear infinite;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+/* Form fields */
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 12px;
+}
+
+.form-inline {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: flex-end;
+}
+
+.form-inline .message {
+  flex-basis: 100%;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: var(--font-small);
+  font-weight: 500;
+  color: var(--text);
+}
+
+.field-hint {
+  font-weight: 400;
+  color: var(--text-secondary);
+}
+
+.input {
+  width: 100%;
+  height: 38px;
+  padding: 0 12px;
+  font: inherit;
+  font-size: var(--font-body);
+  color: var(--text);
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+textarea.input {
+  height: auto;
+  min-height: 72px;
+  padding: 8px 12px;
+  resize: vertical;
+}
+
+.input:hover {
+  border-color: var(--text-muted);
+}
+
+.input:focus {
+  border-color: var(--primary);
+  outline: none;
+  box-shadow: 0 0 0 3px var(--primary-soft-strong);
+}
+
+.input:disabled {
+  color: var(--text-secondary);
+  background: var(--bg);
+}
+
+/* Status badges: soft background, colored text, no bright fills */
+
+.badge {
+  display: inline-flex;
+  gap: 6px;
+  align-items: center;
+  padding: 2px 8px;
+  font-size: 12px;
+  font-weight: 500;
+  white-space: nowrap;
+  border-radius: 999px;
+}
+
+.badge::before {
+  width: 6px;
+  height: 6px;
+  content: '';
+  background: currentcolor;
+  border-radius: 50%;
+}
+
+.badge-success {
+  color: var(--success-text);
+  background: var(--success-soft);
+}
+
+.badge-neutral {
+  color: var(--text-secondary);
+  background: var(--surface-hover);
+}
+
+.badge-warning {
+  color: var(--warning-text);
+  background: var(--warning-soft);
+}
+
+.badge-primary {
+  color: var(--primary);
+  background: var(--primary-soft);
+}
+
+/* Messages */
+
+.message {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+  padding: 10px 12px;
+  font-size: var(--font-small);
+  border-radius: var(--radius-sm);
+}
+
+.message svg {
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.message-error {
+  color: var(--error-text);
+  background: var(--error-soft);
+}
+
+.message-success {
+  color: var(--success-text);
+  background: var(--success-soft);
+}
+
+/* Loading and empty states */
+
+.state {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: center;
+  padding: 40px 16px;
+  color: var(--text-secondary);
+  text-align: center;
+}
+
+.state-inline {
+  flex-direction: row;
+  justify-content: flex-start;
+  padding: 8px 0;
+}
+
+.state-title {
+  font-weight: 600;
+  color: var(--text);
+}
+
+.state .icon-tile {
+  margin-bottom: 4px;
+}
+
+.state .button {
+  margin-top: 8px;
+}
+
+/* Tables */
+
+.table-wrap {
+  overflow-x: auto;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.table th {
+  padding: 10px 16px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  text-align: left;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  background: var(--bg);
+  border-bottom: 1px solid var(--border);
+}
+
+.table td {
+  padding: 12px 16px;
+  vertical-align: middle;
+  border-bottom: 1px solid var(--border);
+}
+
+.table tr:last-child td {
+  border-bottom: none;
+}
+
+.table .cell-actions {
+  text-align: right;
+}
+
+.table .cell-actions .actions {
+  justify-content: flex-end;
+}
+
+.card-flush {
+  padding: 0;
+  overflow: hidden;
+}
+
+.avatar {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  font-size: var(--font-small);
+  font-weight: 600;
+  color: var(--primary);
+  text-transform: uppercase;
+  background: var(--primary-soft);
+  border-radius: 50%;
+}
+
+.person {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}

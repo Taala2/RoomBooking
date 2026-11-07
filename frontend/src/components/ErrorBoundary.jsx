@@ -15,10 +15,10 @@ export class ErrorBoundary extends Component {
   render() {
     if (this.state.hasError) {
       return (
-        <div className="card">
-          <h2>Что-то пошло не так</h2>
-          <p className="muted">Обновите страницу. Если ошибка повторяется — сообщите администратору.</p>
-          <button type="button" onClick={() => window.location.reload()}>
+        <div className="card state">
+          <p className="state-title">Что-то пошло не так</p>
+          <p className="small">Обновите страницу. Если ошибка повторяется — сообщите администратору.</p>
+          <button type="button" className="button button-primary" onClick={() => window.location.reload()}>
             Обновить
           </button>
         </div>

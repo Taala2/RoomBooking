@@ -1,3 +1,5 @@
+import { CircleAlert, CircleCheck } from 'lucide-react'
+
 // Shows an API/validation error; role="alert" makes screen readers announce it.
 export function ErrorMessage({ error }) {
   if (!error) {
@@ -8,7 +10,8 @@ export function ErrorMessage({ error }) {
 
   return (
     <p className="message message-error" role="alert">
-      {text}
+      <CircleAlert size={16} aria-hidden="true" />
+      <span>{text}</span>
     </p>
   )
 }
@@ -20,7 +23,8 @@ export function SuccessMessage({ children }) {
 
   return (
     <p className="message message-success" role="status">
-      {children}
+      <CircleCheck size={16} aria-hidden="true" />
+      <span>{children}</span>
     </p>
   )
 }

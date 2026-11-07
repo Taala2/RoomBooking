@@ -1,0 +1,125 @@
+/* Design tokens: palette from the design concept, light theme only. */
+:root {
+  --bg: #f7f8fa;
+  --surface: #ffffff;
+  --surface-hover: #f3f4f7;
+  --border: #e9ebef;
+  --border-strong: #d5d8df;
+
+  --primary: #4f46e5;
+  --primary-hover: #4338ca;
+  --primary-active: #3730a3;
+  --primary-soft: rgba(79, 70, 229, 0.08);
+  --primary-soft-strong: rgba(79, 70, 229, 0.16);
+
+  --text: #20242d;
+  /* Small secondary text uses a darker grey than the concept's #858B98 for WCAG contrast. */
+  --text-secondary: #6b7280;
+  --text-muted: #858b98;
+
+  --success: #16a36a;
+  --success-text: #0f7a4f;
+  --success-soft: rgba(22, 163, 106, 0.1);
+  --warning: #e9a23b;
+  --warning-text: #9a6212;
+  --warning-soft: rgba(233, 162, 59, 0.12);
+  --error: #dc5252;
+  --error-text: #b93838;
+  --error-soft: rgba(220, 82, 82, 0.1);
+
+  --radius: 12px;
+  --radius-sm: 8px;
+  --shadow: 0 1px 2px rgba(16, 24, 40, 0.04);
+  --shadow-raised: 0 8px 24px rgba(16, 24, 40, 0.12);
+
+  --sidebar-width: 240px;
+  --header-height: 64px;
+
+  --font-page-title: 24px;
+  --font-section: 18px;
+  --font-body: 14px;
+  --font-small: 13px;
+
+  color-scheme: light;
+  font-family: 'Inter Variable', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  font-size: var(--font-body);
+  line-height: 1.5;
+  color: var(--text);
+  background: var(--bg);
+  -webkit-font-smoothing: antialiased;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+}
+
+h1,
+h2,
+h3,
+p {
+  margin: 0;
+}
+
+h1 {
+  font-size: var(--font-page-title);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+h2 {
+  font-size: var(--font-section);
+  font-weight: 600;
+}
+
+h3 {
+  font-size: 15px;
+  font-weight: 600;
+}
+
+a {
+  color: var(--primary);
+  text-decoration: none;
+}
+
+a:hover {
+  color: var(--primary-hover);
+}
+
+ul {
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+.muted {
+  color: var(--text-secondary);
+}
+
+.small {
+  font-size: var(--font-small);
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
