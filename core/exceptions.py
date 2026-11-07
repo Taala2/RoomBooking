@@ -16,6 +16,9 @@ class AdminCannotDemoteSelfError(Exception):
 class RoomNotFoundError(Exception):
     pass
 
+class RoomHasActiveBookingsError(Exception):
+    pass
+
 class BookingConflictError(Exception):
     pass
 

@@ -1,8 +1,13 @@
+from datetime import UTC, datetime
+
 from sqlalchemy.orm import Session
 
-from core.exceptions import RoomNotFoundError
+from bookings.bookings_repositories import has_upcoming_bookings
+from core.exceptions import RoomHasActiveBookingsError, RoomNotFoundError
 from rooms.rooms_models import Room
 from rooms.rooms_repositories import count_rooms, create_room, delete_room, get_room_by_id, get_rooms, update_room
+
+ROOM_NOT_FOUND_MESSAGE = "Комната не найдена"
 
 
 def create_room_service(db: Session, name: str, capacity: int, description: str | None):
@@ -16,7 +21,12 @@ def create_room_service(db: Session, name: str, capacity: int, description: str 
     )
 
 def get_room_service(db: Session, room_id: int):
-    return get_room_by_id(db, room_id)
+    room = get_room_by_id(db, room_id)
+
+    if not room:
+        raise RoomNotFoundError(ROOM_NOT_FOUND_MESSAGE)
+
+    return room
 
 def get_rooms_service(db: Session, limit: int, offset: int):
     return get_rooms(db, limit, offset)
@@ -24,30 +34,19 @@ def get_rooms_service(db: Session, limit: int, offset: int):
 def count_rooms_service(db: Session):
     return count_rooms(db)
 
-def delete_room_service(db: Session, room_id: int):
-    room = get_room_by_id(db, room_id)
+def delete_room_service(db: Session, room_id: int) -> None:
+    room = get_room_service(db, room_id)
 
-    if not room:
-        raise RoomNotFoundError("Комната не найдено")
+    if has_upcoming_bookings(db, room_id, datetime.now(UTC)):
+        raise RoomHasActiveBookingsError("Нельзя удалить комнату с предстоящими бронями")
 
+    # Past and canceled bookings are removed by ON DELETE CASCADE.
     delete_room(db, room)
 
-    return True
+def update_room_service(db: Session, room_id: int, changes: dict):
+    room = get_room_service(db, room_id)
 
-def update_room_service(
-        db: Session,
-        room_id: int,
-        name: str | None,
-        capacity: int | None,
-        description: str | None
-):
-    room = get_room_by_id(db, room_id)
-
-    if not room:
-        raise RoomNotFoundError("Комната не найдено")
-
-    if name: room.name = name
-    if capacity: room.capacity = capacity
-    if description: room.description = description
+    for field, value in changes.items():
+        setattr(room, field, value)
 
     return update_room(db, room)

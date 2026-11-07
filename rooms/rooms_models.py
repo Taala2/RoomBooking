@@ -13,4 +13,5 @@ class Room(Base):
     capacity: Mapped[int]
     description: Mapped[str] = mapped_column(Text, nullable=True)
 
-    bookings: Mapped[List["Booking"]] = relationship(back_populates="room")
+    # passive_deletes: the database removes bookings (ON DELETE CASCADE), not the ORM.
+    bookings: Mapped[List["Booking"]] = relationship(back_populates="room", passive_deletes=True)

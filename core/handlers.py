@@ -1,7 +1,7 @@
 from fastapi import Request, status
 from fastapi.responses import JSONResponse
 
-from core.exceptions import AdminCannotDemoteSelfError, BookingAccessDeniedError, BookingAlreadyCanceledError, BookingConflictError, BookingNotFoundError, EmailAlreadyExistsError, IncorrectPasswordError, InvalidBookingTimeError, RoomNotFoundError, UserNotFoundError, UsernameAlreadyExistsError
+from core.exceptions import AdminCannotDemoteSelfError, BookingAccessDeniedError, BookingAlreadyCanceledError, BookingConflictError, BookingNotFoundError, EmailAlreadyExistsError, IncorrectPasswordError, InvalidBookingTimeError, RoomHasActiveBookingsError, RoomNotFoundError, UserNotFoundError, UsernameAlreadyExistsError
 
 def username_already_exists_handler(
     _: Request,
@@ -54,6 +54,15 @@ def room_not_found_handler(
 ):
     return JSONResponse(
         status_code=status.HTTP_404_NOT_FOUND,
+        content={"detail": str(exc)}
+    )
+
+def room_has_active_bookings_handler(
+        _: Request,
+        exc: RoomHasActiveBookingsError
+):
+    return JSONResponse(
+        status_code=status.HTTP_409_CONFLICT,
         content={"detail": str(exc)}
     )
 
@@ -126,6 +135,10 @@ def register_exception_handlers(app):
     app.add_exception_handler(
         RoomNotFoundError,
         room_not_found_handler
+    )
+    app.add_exception_handler(
+        RoomHasActiveBookingsError,
+        room_has_active_bookings_handler
     )
     app.add_exception_handler(
         BookingConflictError,

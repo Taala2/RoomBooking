@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Query
+from fastapi import APIRouter, Query, status
 
 from core.dependencies import Current_admin, Current_session
 from rooms.rooms_schemas import ListRoomResponse, RoomChangeRequest, RoomRequest, RoomResponse
@@ -7,7 +7,7 @@ from rooms.rooms_services import count_rooms_service, create_room_service, delet
 
 router = APIRouter(prefix="/rooms", tags=["rooms"])
 
-@router.post("/create", response_model=RoomResponse)
+@router.post("/create", response_model=RoomResponse, status_code=status.HTTP_201_CREATED)
 def create_room_router(_: Current_admin, room: RoomRequest, db: Current_session):
     new_room = create_room_service(
         db=db,
@@ -47,22 +47,19 @@ def get_room_router(room_id: int, db: Current_session):
 
 @router.patch("/change/{room_id}", response_model=RoomResponse)
 def change_room_router(
+    room_id: int,
     _: Current_admin,
     room: RoomChangeRequest,
     db: Current_session
 ):
     upd_room = update_room_service(
         db=db,
-        room_id=room.room_id,
-        name=room.name,
-        capacity=room.capacity,
-        description=room.description
+        room_id=room_id,
+        changes=room.model_dump(exclude_unset=True)
     )
 
     return upd_room
 
-@router.delete("delete/{room_id}")
-def delete_room(room_id: int, db: Current_session):
-    del_room = delete_room_service(db, room_id)
-
-    return del_room
+@router.delete("/delete/{room_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_room_router(room_id: int, _: Current_admin, db: Current_session):
+    delete_room_service(db, room_id)

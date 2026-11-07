@@ -30,6 +30,14 @@ def update_booking(db: Session, booking: Booking):
     db.refresh(booking)
     return booking
 
+def has_upcoming_bookings(db: Session, room_id: int, now: datetime) -> bool:
+    stmt = select(Booking.id).where(
+        Booking.room_id == room_id,
+        Booking.status == BookingStatus.ACTIVE,
+        Booking.end_time > now
+    )
+    return db.execute(stmt.limit(1)).first() is not None
+
 def get_conflict_booking(
         db: Session,
         room_id: int,
