@@ -1,10 +1,33 @@
-import { NavLink, useNavigate } from 'react-router-dom'
+import { useEffect } from 'react'
+import { LogOut, Menu } from 'lucide-react'
+import { matchPath, useLocation, useNavigate } from 'react-router-dom'
 
 import { useAuth } from '../context/AuthContext'
+import { Button } from './Button'
 
-export function Header() {
+const PAGE_TITLES = [
+  ['/', 'Главная'],
+  ['/rooms', 'Комнаты'],
+  ['/rooms/:roomId', 'Бронирование'],
+  ['/bookings', 'Мои брони'],
+  ['/admin/rooms', 'Управление комнатами'],
+  ['/admin/users', 'Пользователи'],
+]
+
+function pageTitle(pathname) {
+  const found = PAGE_TITLES.find(([pattern]) => matchPath(pattern, pathname))
+  return found ? found[1] : 'Страница не найдена'
+}
+
+export function Header({ menuOpen, onMenuClick }) {
   const { user, isAdmin, logout } = useAuth()
+  const location = useLocation()
   const navigate = useNavigate()
+  const title = pageTitle(location.pathname)
+
+  useEffect(() => {
+    document.title = `${title} — RoomBooking`
+  }, [title])
 
   function handleLogout() {
     logout()
@@ -13,36 +36,31 @@ export function Header() {
 
   return (
     <header className="header">
-      <NavLink to="/" className="logo">
-        RoomBooking
-      </NavLink>
+      <Button
+        variant="ghost"
+        iconOnly
+        icon={Menu}
+        className="header-menu"
+        onClick={onMenuClick}
+        aria-expanded={menuOpen}
+        aria-controls="sidebar"
+      >
+        Открыть меню
+      </Button>
 
-      <nav className="nav" aria-label="Основная навигация">
-        <NavLink to="/" end>
-          Комнаты
-        </NavLink>
-        {user && <NavLink to="/bookings">Мои брони</NavLink>}
-        {isAdmin && <NavLink to="/admin/rooms">Управление комнатами</NavLink>}
-        {isAdmin && <NavLink to="/admin/users">Пользователи</NavLink>}
-      </nav>
+      <h1>{title}</h1>
 
       <div className="header-user">
-        {user ? (
-          <>
-            <span className="muted">
-              {user.login}
-              {isAdmin && ' (админ)'}
-            </span>
-            <button type="button" className="button-secondary" onClick={handleLogout}>
-              Выйти
-            </button>
-          </>
-        ) : (
-          <>
-            <NavLink to="/login">Вход</NavLink>
-            <NavLink to="/register">Регистрация</NavLink>
-          </>
-        )}
+        <span className="avatar" aria-hidden="true">
+          {user.login.slice(0, 1)}
+        </span>
+        <div className="header-user-name">
+          <span>{user.login}</span>
+          <span>{isAdmin ? 'Администратор' : 'Пользователь'}</span>
+        </div>
+        <Button variant="ghost" iconOnly icon={LogOut} onClick={handleLogout} title="Выйти">
+          Выйти
+        </Button>
       </div>
     </header>
   )

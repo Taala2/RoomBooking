@@ -1,6 +1,7 @@
 import { Navigate, Outlet, useLocation } from 'react-router-dom'
 
 import { useAuth } from '../context/AuthContext'
+import { LoadingState } from './States'
 
 // Guests go to the login page (and come back after it); non-admins leave admin pages.
 export function ProtectedRoute({ adminOnly = false }) {
@@ -8,7 +9,7 @@ export function ProtectedRoute({ adminOnly = false }) {
   const location = useLocation()
 
   if (loading) {
-    return <p className="muted">Загрузка…</p>
+    return <LoadingState />
   }
 
   if (!user) {

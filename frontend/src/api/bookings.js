@@ -1,7 +1,18 @@
 import { request } from './client'
+import { listRooms } from './rooms'
+
+const ROOMS_LIMIT = 100
 
 export function listMyBookings() {
   return request('/bookings/')
+}
+
+// Bookings only carry room_id, so room names come from the room list.
+export async function listMyBookingsWithRooms() {
+  const [bookings, rooms] = await Promise.all([listMyBookings(), listRooms({ limit: ROOMS_LIMIT })])
+  const roomNames = Object.fromEntries(rooms.items.map((room) => [room.id, room.name]))
+
+  return { bookings, roomNames, roomsTotal: rooms.total }
 }
 
 export function createBooking(roomId, startTime, endTime) {
