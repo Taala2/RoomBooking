@@ -26,6 +26,7 @@ def delete_room(db: Session, room: Room) -> None:
 def get_rooms(db: Session, limit: int, offset: int):
     stmt = (
         select(Room)
+        .order_by(Room.id)
         .offset(offset)
         .limit(limit)
     )

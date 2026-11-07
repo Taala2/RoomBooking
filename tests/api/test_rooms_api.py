@@ -5,7 +5,7 @@ import pytest
 from bookings.bookings_models import Booking
 from bookings.bookings_repositories import create_booking, get_booking_by_id
 from bookings.bookings_schemas import BookingStatus
-from tests.factories import auth_headers
+from tests.factories import auth_headers, make_room
 
 pytestmark = pytest.mark.api
 
@@ -58,6 +58,16 @@ def test_list_rooms_returns_page(client, room):
 
     assert response.status_code == 200
     assert response.json()["total"] == 1
+
+
+def test_list_keeps_order_after_update(client, db, admin):
+    first = make_room(db, "Первая")
+    second = make_room(db, "Вторая")
+    client.patch(change_url(first.id), json={"capacity": 7}, headers=auth_headers(admin))
+
+    ids = [item["id"] for item in client.get("/rooms/list").json()["items"]]
+
+    assert ids == [first.id, second.id]
 
 
 def test_change_uses_room_id_from_path_and_keeps_other_fields(client, admin, room):
