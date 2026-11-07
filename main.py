@@ -1,6 +1,7 @@
 import logging
 
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 
 from core.config import settings
 from core.handlers import register_exception_handlers
@@ -14,6 +15,15 @@ logging.basicConfig(
 )
 
 app = FastAPI()
+
+if settings.cors_origins:
+    # The frontend sends the JWT in the Authorization header, cookies are not used.
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=settings.cors_origins,
+        allow_methods=["*"],
+        allow_headers=["*"]
+    )
 
 register_exception_handlers(app)
 

@@ -87,6 +87,20 @@ def test_change_role_of_missing_user_returns_404(client, admin):
     assert response.status_code == 404
 
 
+def test_admin_lists_users_without_password_hashes(client, admin, user):
+    response = client.get("/users/list", headers=auth_headers(admin))
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["total"] == 2
+    assert {item["login"] for item in body["items"]} == {admin.login, user.login}
+    assert all("hashed_password" not in item for item in body["items"])
+
+
+def test_regular_user_cannot_list_users(client, user):
+    assert client.get("/users/list", headers=auth_headers(user)).status_code == 403
+
+
 def test_regular_user_cannot_change_roles(client, user, other_user):
     response = client.patch(role_url(other_user.id), json={"role": "admin"}, headers=auth_headers(user))
 

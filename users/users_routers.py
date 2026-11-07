@@ -1,9 +1,9 @@
-from fastapi import APIRouter, status
+from fastapi import APIRouter, Query, status
 
 from core.dependencies import Current_admin, Current_session, Current_user
 from core.security import create_access_token
-from users.users_schemas import ChangeUserRoleRequest, ChangeUserRoleRespone, TokenResponse, UserAuthenticateRequest, UserCreateRequest, UserCreateResponse, UserResponse
-from users.users_services import authenticate_user_service, change_user_role_service, create_user_service
+from users.users_schemas import ChangeUserRoleRequest, ChangeUserRoleRespone, ListUserResponse, TokenResponse, UserAuthenticateRequest, UserCreateRequest, UserCreateResponse, UserResponse
+from users.users_services import authenticate_user_service, change_user_role_service, count_users_service, create_user_service, get_users_service
 
 
 router = APIRouter(prefix="/users", tags=["users"])
@@ -33,6 +33,20 @@ def login_router(auth_data: UserAuthenticateRequest, db: Current_session):
 @router.get("/me", response_model=UserResponse)
 def profile_router(user: Current_user):
     return user
+
+@router.get("/list", response_model=ListUserResponse)
+def list_users_router(
+    _: Current_admin,
+    db: Current_session,
+    limit: int = Query(default=20, ge=1, le=100),
+    offset: int = Query(default=0, ge=0),
+):
+    return {
+        "items": get_users_service(db, limit, offset),
+        "total": count_users_service(db),
+        "limit": limit,
+        "offset": offset,
+    }
 
 @router.patch("/{user_id}/role", response_model=ChangeUserRoleRespone)
 def change_role_router(

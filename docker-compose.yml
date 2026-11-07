@@ -22,6 +22,7 @@ services:
       DATABASE_URL: postgresql+psycopg2://postgres:postgres@db:5432/room_booking
       # Taken from .env next to this file (copy .env.example to .env).
       SECRET_KEY: ${SECRET_KEY:?set SECRET_KEY in .env}
+      CORS_ORIGINS: ${CORS_ORIGINS:-[]}
     ports:
       - "8000:8000"
 

@@ -53,6 +53,7 @@ python -c "import secrets; print(secrets.token_urlsafe(32))"
 | `ACCESS_TOKEN_EXPIRE_MINUTES` | нет | `30` | срок жизни токена |
 | `DB_ECHO` | нет | `false` | логировать SQL-запросы |
 | `LOG_LEVEL` | нет | `INFO` | уровень логов приложения (`DEBUG`, `INFO`, `WARNING`, …) |
+| `CORS_ORIGINS` | нет | `[]` | JSON-список адресов фронтенда, например `["http://localhost:5173"]`; пустой — CORS выключен |
 | `TEST_DATABASE_URL` | нет | `DATABASE_URL` + `_test` | БД для тестов |
 
 ### Первый администратор
@@ -75,9 +76,11 @@ docker compose exec db psql -U postgres -d room_booking -c "UPDATE users SET rol
 | POST | `/users/auth/register` | все | регистрация (логин без `@`) |
 | POST | `/users/auth/login` | все | вход по логину или email, возвращает JWT |
 | GET | `/users/me` | пользователь | профиль текущего пользователя |
+| GET | `/users/list?limit=20&offset=0` | админ | список пользователей |
 | PATCH | `/users/{user_id}/role` | админ | сменить роль другому пользователю |
 | GET | `/rooms/list?limit=20&offset=0` | все | список комнат с пагинацией |
 | GET | `/rooms/{room_id}` | все | комната |
+| GET | `/rooms/{room_id}/bookings?start=&end=` | пользователь | занятые интервалы комнаты (только время, без владельца), период ≤ 7 дней |
 | POST | `/rooms/create` | админ | создать комнату |
 | PATCH | `/rooms/change/{room_id}` | админ | изменить переданные поля комнаты |
 | DELETE | `/rooms/delete/{room_id}` | админ | удалить комнату |
@@ -88,7 +91,7 @@ docker compose exec db psql -U postgres -d room_booking -c "UPDATE users SET rol
 
 ### Правила бронирования
 
-- время передаётся **с часовым поясом** (`2026-11-08T10:00:00Z` или `...+05:00`), без него — `422`; на сервере всё приводится к UTC;
+- время передаётся **с часовым поясом** (`2026-11-08T10:00:00Z` или `...+05:00`), без него — `422`; на сервере всё приводится к UTC; в query-параметрах `+` нужно кодировать как `%2B` (это делает `URLSearchParams`);
 - начало раньше конца, не в прошлом, длительность не больше 5 часов;
 - активные брони одной комнаты не пересекаются; брони «встык» (10:00–11:00 и 11:00–12:00) разрешены;
 - отменённая бронь освобождает время.

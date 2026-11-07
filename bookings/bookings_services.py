@@ -5,7 +5,7 @@ from sqlalchemy.exc import DBAPIError
 from sqlalchemy.orm import Session
 
 from bookings.bookings_models import Booking
-from bookings.bookings_repositories import create_booking, get_booking_by_id, get_booking_by_user_id, get_conflict_booking, update_booking
+from bookings.bookings_repositories import create_booking, get_booking_by_id, get_booking_by_user_id, get_conflict_booking, get_room_bookings_between, update_booking
 from bookings.bookings_schemas import BookingStatus
 from core.exceptions import BookingAccessDeniedError, BookingAlreadyCanceledError, BookingConflictError, BookingNotFoundError, InvalidBookingTimeError, RoomNotFoundError
 from rooms.rooms_repositories import get_room_by_id
@@ -14,6 +14,7 @@ BOOKING_CONFLICT_MESSAGE = "На введенное время текущая к
 # 23P01: overlap rejected by bookings_no_overlap.
 # 40P01: two overlapping writes waited for each other and Postgres aborted one.
 OVERLAP_ERROR_CODES = {"23P01", "40P01"}
+MAX_SCHEDULE_RANGE = timedelta(days=7)
 
 logger = logging.getLogger(__name__)
 
@@ -57,6 +58,18 @@ def create_booking_service(
 
 def get_my_booking_service(db: Session, user_id: int):
     return get_booking_by_user_id(db, user_id)
+
+def get_room_busy_slots_service(db: Session, room_id: int, start: datetime, end: datetime):
+    if start >= end:
+        raise InvalidBookingTimeError("Конец периода должен быть позже начала")
+
+    if end - start > MAX_SCHEDULE_RANGE:
+        raise InvalidBookingTimeError("Период расписания — не больше 7 дней")
+
+    if not get_room_by_id(db, room_id):
+        raise RoomNotFoundError("Комната не найдена")
+
+    return get_room_bookings_between(db, room_id, start, end)
 
 def cancel_booking_service(db: Session, user_id: int, booking_id: int):
     booking = get_user_booking(db, user_id, booking_id)

@@ -9,6 +9,8 @@ class Settings(BaseSettings):
     access_token_expire_minutes: int = 30
     db_echo: bool = False
     log_level: str = "INFO"
+    # JSON list, e.g. CORS_ORIGINS=["http://localhost:5173"]; empty means CORS is off.
+    cors_origins: list[str] = []
 
     model_config = SettingsConfigDict(
         env_file=".env",

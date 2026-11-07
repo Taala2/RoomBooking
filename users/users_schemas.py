@@ -35,6 +35,12 @@ class UserResponse(BaseModel):
         from_attributes=True
     )
 
+class ListUserResponse(BaseModel):
+    items: list[UserResponse]
+    total: int
+    limit: int
+    offset: int
+
 class TokenResponse(BaseModel):
     access_token: str
     token_type: str = "bearer"

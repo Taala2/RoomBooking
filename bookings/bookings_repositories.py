@@ -30,6 +30,15 @@ def update_booking(db: Session, booking: Booking):
     db.refresh(booking)
     return booking
 
+def get_room_bookings_between(db: Session, room_id: int, start: datetime, end: datetime):
+    stmt = select(Booking).where(
+        Booking.room_id == room_id,
+        Booking.status == BookingStatus.ACTIVE,
+        Booking.start_time < end,
+        Booking.end_time > start
+    ).order_by(Booking.start_time)
+    return db.execute(stmt).scalars().all()
+
 def has_upcoming_bookings(db: Session, room_id: int, now: datetime) -> bool:
     stmt = select(Booking.id).where(
         Booking.room_id == room_id,

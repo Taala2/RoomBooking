@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 from core.exceptions import AdminCannotDemoteSelfError, EmailAlreadyExistsError, IncorrectPasswordError, UserNotFoundError, UsernameAlreadyExistsError
 from core.security import hash_password, verify_password
 from users.users_models import User
-from users.users_repositories import create_user, get_user_by_id, get_user_by_login_or_email, update_user
+from users.users_repositories import count_users, create_user, get_user_by_id, get_user_by_login_or_email, get_users, update_user
 from users.users_schemas import UserRole
 
 LOGIN_TAKEN_MESSAGE = "Такой логин уже занят"
@@ -50,6 +50,12 @@ def authenticate_user_service(db: Session, login_or_email: str, password: str):
         raise IncorrectPasswordError("Неверный логин или пароль")
 
     return user
+
+def get_users_service(db: Session, limit: int, offset: int):
+    return get_users(db, limit, offset)
+
+def count_users_service(db: Session):
+    return count_users(db)
 
 def change_user_role_service(db: Session, current_user: User, user_id: int, role: UserRole):
     user = get_user_by_id(db, user_id)

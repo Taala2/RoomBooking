@@ -29,6 +29,15 @@ class BookingResponse(BaseModel):
         from_attributes=True
     )
 
+class BusySlotResponse(BaseModel):
+    """Occupied interval of a room: no owner data, safe to show to any user."""
+    start_time: datetime
+    end_time: datetime
+
+    model_config = ConfigDict(
+        from_attributes=True
+    )
+
 class BookingCancelRequest(BaseModel):
     booking_id: int
 
