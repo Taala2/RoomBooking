@@ -1,3 +1,4 @@
+import logging
 from datetime import UTC, datetime, timedelta
 
 from sqlalchemy.exc import DBAPIError
@@ -13,6 +14,8 @@ BOOKING_CONFLICT_MESSAGE = "На введенное время текущая к
 # 23P01: overlap rejected by bookings_no_overlap.
 # 40P01: two overlapping writes waited for each other and Postgres aborted one.
 OVERLAP_ERROR_CODES = {"23P01", "40P01"}
+
+logger = logging.getLogger(__name__)
 
 
 def create_booking_service(
@@ -37,6 +40,7 @@ def create_booking_service(
     )
 
     if conflict_booking:
+        logger.info("Booking conflict: room=%s overlaps booking %s", room_id, conflict_booking.id)
         raise BookingConflictError(BOOKING_CONFLICT_MESSAGE)
 
     new_booking = Booking(
@@ -46,7 +50,10 @@ def create_booking_service(
         end_time=end_time
     )
 
-    return save_without_overlap(db, create_booking, new_booking)
+    booking = save_without_overlap(db, create_booking, new_booking)
+    logger.info("Booking %s created: room=%s user=%s %s..%s", booking.id, room_id, user_id, start_time, end_time)
+
+    return booking
 
 def get_my_booking_service(db: Session, user_id: int):
     return get_booking_by_user_id(db, user_id)
@@ -56,7 +63,10 @@ def cancel_booking_service(db: Session, user_id: int, booking_id: int):
 
     booking.status = BookingStatus.CANCELED
 
-    return update_booking(db, booking)
+    canceled = update_booking(db, booking)
+    logger.info("Booking %s canceled by user=%s", booking_id, user_id)
+
+    return canceled
 
 def change_booking_time_service(
         db: Session,
@@ -78,12 +88,16 @@ def change_booking_time_service(
     )
 
     if conflict:
+        logger.info("Booking conflict: booking %s cannot move onto booking %s", booking_id, conflict.id)
         raise BookingConflictError(BOOKING_CONFLICT_MESSAGE)
 
     booking.start_time = start_time
     booking.end_time = end_time
 
-    return save_without_overlap(db, update_booking, booking)
+    changed = save_without_overlap(db, update_booking, booking)
+    logger.info("Booking %s moved to %s..%s", booking_id, start_time, end_time)
+
+    return changed
 
 def save_without_overlap(db: Session, save, booking: Booking):
     """Save a booking; a concurrent overlap rejected by the DB becomes a conflict."""
@@ -92,7 +106,11 @@ def save_without_overlap(db: Session, save, booking: Booking):
     except DBAPIError as exc:
         db.rollback()
 
-        if getattr(exc.orig, "pgcode", None) in OVERLAP_ERROR_CODES:
+        pgcode = getattr(exc.orig, "pgcode", None)
+
+        if pgcode in OVERLAP_ERROR_CODES:
+            # The service check passed but a concurrent request won: the race was caught by the DB.
+            logger.warning("Concurrent booking overlap rejected by database (pgcode=%s)", pgcode)
             raise BookingConflictError(BOOKING_CONFLICT_MESSAGE) from exc
 
         raise

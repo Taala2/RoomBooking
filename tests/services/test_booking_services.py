@@ -1,3 +1,4 @@
+import logging
 from datetime import timedelta
 
 import pytest
@@ -79,15 +80,24 @@ def test_overlap_with_several_bookings_raises_conflict(db, user, other_user, roo
 
 
 def test_database_rejects_overlap_when_service_check_is_skipped(
-        db, user, other_user, room, tomorrow, monkeypatch
+        db, user, other_user, room, tomorrow, monkeypatch, caplog
 ):
     book(db, user, room.id, tomorrow, tomorrow + 2 * HOUR)
     monkeypatch.setattr(bookings_services, "get_conflict_booking", lambda **_: None)
 
-    with pytest.raises(BookingConflictError):
-        book(db, other_user, room.id, tomorrow + HOUR, tomorrow + 3 * HOUR)
+    with caplog.at_level(logging.WARNING, logger="bookings.bookings_services"):
+        with pytest.raises(BookingConflictError):
+            book(db, other_user, room.id, tomorrow + HOUR, tomorrow + 3 * HOUR)
 
     assert len(get_my_booking_service(db, other_user.id)) == 0
+    assert "rejected by database (pgcode=23P01)" in caplog.text
+
+
+def test_created_booking_is_logged(db, user, room, tomorrow, caplog):
+    with caplog.at_level(logging.INFO, logger="bookings.bookings_services"):
+        booking = book(db, user, room.id, tomorrow, tomorrow + HOUR)
+
+    assert f"Booking {booking.id} created" in caplog.text
 
 
 def test_change_booking_time_within_own_slot(db, user, room, tomorrow):

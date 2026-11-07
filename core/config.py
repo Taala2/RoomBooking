@@ -8,6 +8,7 @@ class Settings(BaseSettings):
     algorithm: str = "HS256"
     access_token_expire_minutes: int = 30
     db_echo: bool = False
+    log_level: str = "INFO"
 
     model_config = SettingsConfigDict(
         env_file=".env",

@@ -1,7 +1,24 @@
+import logging
+
 from fastapi import Request, status
 from fastapi.responses import JSONResponse
 
 from core.exceptions import AdminCannotDemoteSelfError, BookingAccessDeniedError, BookingAlreadyCanceledError, BookingConflictError, BookingNotFoundError, EmailAlreadyExistsError, IncorrectPasswordError, InvalidBookingTimeError, RoomHasActiveBookingsError, RoomNotFoundError, UserNotFoundError, UsernameAlreadyExistsError
+
+logger = logging.getLogger(__name__)
+
+def unhandled_exception_handler(
+        request: Request,
+        exc: Exception
+):
+    # Starlette re-raises the exception after this handler, so uvicorn logs the
+    # full traceback; here we only add context and hide internals from the client.
+    logger.error("Unhandled %s on %s %s", type(exc).__name__, request.method, request.url.path)
+
+    return JSONResponse(
+        status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        content={"detail": "Внутренняя ошибка сервера"}
+    )
 
 def username_already_exists_handler(
     _: Request,
@@ -112,6 +129,10 @@ def invalid_booking_time_handler(
     )
 
 def register_exception_handlers(app):
+    app.add_exception_handler(
+        Exception,
+        unhandled_exception_handler
+    )
     app.add_exception_handler(
         UsernameAlreadyExistsError,
         username_already_exists_handler
