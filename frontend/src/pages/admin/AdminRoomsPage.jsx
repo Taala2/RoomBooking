@@ -97,6 +97,11 @@ export function AdminRoomsPage() {
           <AdminRoomItem key={room.id} room={room} onChanged={reload} onMessage={setMessage} />
         ))}
       </ul>
+      {data && data.total > data.items.length && (
+        <p className="muted">
+          Показаны первые {data.items.length} из {data.total}.
+        </p>
+      )}
     </section>
   )
 }

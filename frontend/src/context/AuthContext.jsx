@@ -34,10 +34,15 @@ export function AuthProvider({ children }) {
     const { access_token: token } = await loginRequest(loginOrEmail, password)
     setToken(token)
 
-    const me = await getMe()
-    setUser(me)
-
-    return me
+    try {
+      const me = await getMe()
+      setUser(me)
+      return me
+    } catch (error) {
+      // Do not leave a token behind for a login that did not finish.
+      clearToken()
+      throw error
+    }
   }, [])
 
   const value = useMemo(

@@ -26,6 +26,18 @@ export function fromInputs(dateValue, timeValue) {
   return new Date(`${dateValue}T${timeValue}`)
 }
 
+// Start/end on one date; an end time not after the start means "next day" (e.g. 22:00-01:00).
+export function intervalFromInputs(dateValue, startTime, endTime) {
+  const start = fromInputs(dateValue, startTime)
+  const end = fromInputs(dateValue, endTime)
+
+  if (end <= start) {
+    end.setDate(end.getDate() + 1)
+  }
+
+  return { start, end }
+}
+
 // Local day [00:00, next 00:00) as ISO strings for the busy-slots request.
 export function dayRange(dateValue) {
   const start = fromInputs(dateValue, '00:00')

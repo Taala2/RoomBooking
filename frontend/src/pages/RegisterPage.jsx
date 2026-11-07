@@ -6,15 +6,21 @@ import { ErrorMessage } from '../components/ErrorMessage'
 import { useAuth } from '../context/AuthContext'
 
 const MIN_PASSWORD_LENGTH = 8
+// Rough format check for a readable message; the backend validates the address fully.
+const EMAIL_PATTERN = /^[^@\s]+@[^@\s]+\.[^@\s]+$/
 
 // Mirrors backend rules: login 3+ chars without "@", password 8+ chars.
-function validate({ login, password, passwordRepeat }) {
+function validate({ login, email, password, passwordRepeat }) {
   if (login.trim().length < 3) {
     return 'Логин — не короче 3 символов'
   }
 
   if (login.includes('@')) {
     return 'Логин не может содержать «@»'
+  }
+
+  if (!EMAIL_PATTERN.test(email.trim())) {
+    return 'Введите корректный email'
   }
 
   if (password.length < MIN_PASSWORD_LENGTH) {

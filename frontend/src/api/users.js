@@ -5,7 +5,7 @@ export function listUsers({ limit = 100, offset = 0 } = {}) {
 }
 
 export function changeRole(userId, role) {
-  return request(`/users/${userId}/role`, {
+  return request(`/users/${encodeURIComponent(userId)}/role`, {
     method: 'PATCH',
     body: { role },
   })

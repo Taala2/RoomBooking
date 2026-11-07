@@ -5,12 +5,15 @@ import { ErrorMessage } from './ErrorMessage'
 const EMPTY_ROOM = { name: '', capacity: 10, description: '' }
 
 // Same limits as the backend schema: name 3-100, capacity 1-100, description up to 1000.
+// capacity is kept as the input string, so the field can be cleared while typing.
 function validate({ name, capacity, description }) {
   if (name.trim().length < 3 || name.trim().length > 100) {
     return 'Название — от 3 до 100 символов'
   }
 
-  if (!Number.isInteger(capacity) || capacity < 1 || capacity > 100) {
+  const capacityNumber = Number(capacity)
+
+  if (capacity === '' || !Number.isInteger(capacityNumber) || capacityNumber < 1 || capacityNumber > 100) {
     return 'Вместимость — целое число от 1 до 100'
   }
 
@@ -25,7 +28,7 @@ function validate({ name, capacity, description }) {
 export function RoomForm({ initialRoom = EMPTY_ROOM, submitLabel, onSubmit, onCancel }) {
   const [values, setValues] = useState({
     name: initialRoom.name,
-    capacity: initialRoom.capacity,
+    capacity: String(initialRoom.capacity),
     description: initialRoom.description ?? '',
   })
   const [error, setError] = useState(null)
@@ -33,7 +36,7 @@ export function RoomForm({ initialRoom = EMPTY_ROOM, submitLabel, onSubmit, onCa
 
   function updateField(event) {
     const { name, value } = event.target
-    setValues((previous) => ({ ...previous, [name]: name === 'capacity' ? Number(value) : value }))
+    setValues((previous) => ({ ...previous, [name]: value }))
   }
 
   async function handleSubmit(event) {
@@ -50,7 +53,7 @@ export function RoomForm({ initialRoom = EMPTY_ROOM, submitLabel, onSubmit, onCa
     try {
       await onSubmit({
         name: values.name.trim(),
-        capacity: values.capacity,
+        capacity: Number(values.capacity),
         description: values.description.trim() || null,
       })
     } catch (err) {

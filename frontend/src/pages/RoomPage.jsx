@@ -23,6 +23,14 @@ export function RoomPage() {
   }, [roomId, date])
   const slots = useAsync(loadSlots)
 
+  function handleDateChange(event) {
+    // A cleared date input gives "": keep the previous day instead of an invalid date.
+    if (event.target.value) {
+      setDate(event.target.value)
+      setSuccess(null)
+    }
+  }
+
   async function handleBook(start, end) {
     setSuccess(null)
     const booking = await createBooking(Number(roomId), start.toISOString(), end.toISOString())
@@ -55,16 +63,16 @@ export function RoomPage() {
       <div className="card">
         <label className="inline-label">
           День
-          <input type="date" value={date} onChange={(event) => setDate(event.target.value)} />
+          <input type="date" value={date} onChange={handleDateChange} required />
         </label>
 
         <ErrorMessage error={slots.error} />
-        {slots.data && <DaySchedule date={date} slots={slots.data} />}
+        {slots.data ? <DaySchedule date={date} slots={slots.data} /> : !slots.error && <p className="muted">Загрузка расписания…</p>}
       </div>
 
       <div className="card">
         <h2>Забронировать на {formatDate(`${date}T00:00`)}</h2>
-        <p className="muted">Не дольше 5 часов. Брони «встык» разрешены.</p>
+        <p className="muted">Не дольше 5 часов. Брони «встык» разрешены. Если конец раньше начала — бронь до следующего дня.</p>
         {/* key: a new day resets the form to that day */}
         <TimeRangeForm key={date} initialDate={date} showDate={false} submitLabel="Забронировать" onSubmit={handleBook} />
         <SuccessMessage>{success}</SuccessMessage>

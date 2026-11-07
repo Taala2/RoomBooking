@@ -1,24 +1,26 @@
-import { formatTime, fromInputs } from '../utils/dates'
+import { dayRange, formatTime } from '../utils/dates'
 
-const DAY_MS = 24 * 60 * 60 * 1000
 const HOUR_MARKS = [0, 3, 6, 9, 12, 15, 18, 21, 24]
 
 // Position of a busy slot on the day bar, in percent; slots crossing midnight are clipped.
-function slotPosition(slot, dayStart) {
+// The real day length is used: days with a clock change have 23 or 25 hours.
+function slotPosition(slot, dayStart, dayLength) {
   const start = Math.max(new Date(slot.start_time) - dayStart, 0)
-  const end = Math.min(new Date(slot.end_time) - dayStart, DAY_MS)
+  const end = Math.min(new Date(slot.end_time) - dayStart, dayLength)
 
-  return { left: `${(start / DAY_MS) * 100}%`, width: `${((end - start) / DAY_MS) * 100}%` }
+  return { left: `${(start / dayLength) * 100}%`, width: `${((end - start) / dayLength) * 100}%` }
 }
 
 export function DaySchedule({ date, slots }) {
-  const dayStart = fromInputs(date, '00:00')
+  const range = dayRange(date)
+  const dayStart = new Date(range.start)
+  const dayLength = new Date(range.end) - dayStart
 
   return (
     <div className="schedule">
       <div className="day-bar" aria-hidden="true">
         {slots.map((slot) => (
-          <span key={slot.start_time} className="day-bar-busy" style={slotPosition(slot, dayStart)} />
+          <span key={slot.start_time} className="day-bar-busy" style={slotPosition(slot, dayStart, dayLength)} />
         ))}
       </div>
       <div className="day-bar-hours" aria-hidden="true">

@@ -1,6 +1,6 @@
 import { useState } from 'react'
 
-import { fromInputs, validateInterval } from '../utils/dates'
+import { intervalFromInputs, validateInterval } from '../utils/dates'
 import { ErrorMessage } from './ErrorMessage'
 
 // Date + start/end time form used for creating and moving bookings.
@@ -19,8 +19,7 @@ export function TimeRangeForm({ initialDate, initialStart = '10:00', initialEnd 
 
   async function handleSubmit(event) {
     event.preventDefault()
-    const start = fromInputs(date, values.start)
-    const end = fromInputs(date, values.end)
+    const { start, end } = intervalFromInputs(date, values.start, values.end)
     const validationError = validateInterval(start, end)
     setError(validationError)
 
