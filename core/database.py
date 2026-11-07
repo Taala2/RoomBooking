@@ -1,10 +1,10 @@
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, DeclarativeBase
 
+from core.config import settings
 
-db_url = "postgresql+psycopg2://postgres:postgres@localhost:5432/room_booking?client_encoding=utf8"
 
-engine = create_engine(db_url, echo=True)
+engine = create_engine(settings.database_url, echo=settings.db_echo)
 
 SessionLocal = sessionmaker(bind=engine, autoflush=False, autocommit=False)
 
