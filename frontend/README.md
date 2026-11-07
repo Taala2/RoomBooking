@@ -5,7 +5,7 @@ React 19 + Vite, JavaScript. Из зависимостей только `react-r
 ## Запуск
 
 ```bash
-cp .env.example .env     # VITE_API_URL — адрес backend
+cp .env.example .env     # VITE_API_URL — адрес backend, без пути (http://host:port)
 npm install
 npm run dev              # http://localhost:5173
 ```
