@@ -1,11 +1,22 @@
 import { useState } from 'react'
 
 import { intervalFromInputs, validateInterval } from '../utils/dates'
+import { Button } from './Button'
 import { ErrorMessage } from './ErrorMessage'
 
 // Date + start/end time form used for creating and moving bookings.
 // onSubmit(start: Date, end: Date) may throw an ApiError, which is shown under the form.
-export function TimeRangeForm({ initialDate, initialStart = '10:00', initialEnd = '11:00', submitLabel, onSubmit, onCancel, showDate = true }) {
+// inline: one row (moving a booking); otherwise stacked with a full-width main button.
+export function TimeRangeForm({
+  initialDate,
+  initialStart = '10:00',
+  initialEnd = '11:00',
+  submitLabel,
+  onSubmit,
+  onCancel,
+  showDate = true,
+  inline = false,
+}) {
   const [values, setValues] = useState({ date: initialDate, start: initialStart, end: initialEnd })
   const [error, setError] = useState(null)
   const [submitting, setSubmitting] = useState(false)
@@ -38,31 +49,37 @@ export function TimeRangeForm({ initialDate, initialStart = '10:00', initialEnd 
     }
   }
 
-  return (
-    <form onSubmit={handleSubmit} className="form form-inline" noValidate>
+  const fields = (
+    <>
       {showDate && (
-        <label>
+        <label className="field">
           Дата
-          <input name="date" type="date" value={values.date} onChange={updateField} required />
+          <input className="input" name="date" type="date" value={values.date} onChange={updateField} required />
         </label>
       )}
-      <label>
+      <label className="field">
         Начало
-        <input name="start" type="time" value={values.start} onChange={updateField} required />
+        <input className="input" name="start" type="time" value={values.start} onChange={updateField} required />
       </label>
-      <label>
+      <label className="field">
         Конец
-        <input name="end" type="time" value={values.end} onChange={updateField} required />
+        <input className="input" name="end" type="time" value={values.end} onChange={updateField} required />
       </label>
+    </>
+  )
 
-      <div className="form-actions">
-        <button type="submit" disabled={submitting}>
-          {submitting ? 'Сохраняем…' : submitLabel}
-        </button>
+  return (
+    <form onSubmit={handleSubmit} className={inline ? 'form-inline' : 'form'} noValidate>
+      {inline ? fields : <div className="form-row">{fields}</div>}
+
+      <div className="actions">
+        <Button type="submit" variant="primary" block={!inline} loading={submitting}>
+          {submitLabel}
+        </Button>
         {onCancel && (
-          <button type="button" className="button-secondary" onClick={onCancel}>
+          <Button variant="ghost" onClick={onCancel}>
             Отмена
-          </button>
+          </Button>
         )}
       </div>
 

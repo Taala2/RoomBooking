@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Link, Navigate, useNavigate } from 'react-router-dom'
 
 import { register } from '../api/auth'
+import { Button } from '../components/Button'
 import { ErrorMessage } from '../components/ErrorMessage'
 import { useAuth } from '../context/AuthContext'
 
@@ -73,38 +74,43 @@ export function RegisterPage() {
   }
 
   return (
-    <section className="card narrow">
+    <section className="card auth-card">
       <h1>Регистрация</h1>
+      <p className="muted">Создайте аккаунт для бронирования комнат.</p>
 
       <form onSubmit={handleSubmit} className="form" noValidate>
-        <label>
+        <label className="field">
           Логин
-          <input name="login" value={form.login} onChange={updateField} required autoComplete="username" />
+          <input className="input" name="login" value={form.login} onChange={updateField} required autoComplete="username" />
+          <span className="field-hint">Не короче 3 символов, без «@»</span>
         </label>
 
-        <label>
+        <label className="field">
           Email
-          <input name="email" type="email" value={form.email} onChange={updateField} required autoComplete="email" />
+          <input className="input" name="email" type="email" value={form.email} onChange={updateField} required autoComplete="email" />
         </label>
 
-        <label>
-          Пароль
-          <input name="password" type="password" value={form.password} onChange={updateField} required autoComplete="new-password" />
-        </label>
+        <div className="form-row">
+          <label className="field">
+            Пароль
+            <input className="input" name="password" type="password" value={form.password} onChange={updateField} required autoComplete="new-password" />
+          </label>
 
-        <label>
-          Повторите пароль
-          <input name="passwordRepeat" type="password" value={form.passwordRepeat} onChange={updateField} required autoComplete="new-password" />
-        </label>
+          <label className="field">
+            Повторите пароль
+            <input className="input" name="passwordRepeat" type="password" value={form.passwordRepeat} onChange={updateField} required autoComplete="new-password" />
+          </label>
+        </div>
+        <span className="field-hint small">Пароль — не короче 8 символов</span>
 
         <ErrorMessage error={error} />
 
-        <button type="submit" disabled={submitting}>
-          {submitting ? 'Создаём аккаунт…' : 'Зарегистрироваться'}
-        </button>
+        <Button type="submit" variant="primary" block loading={submitting}>
+          Зарегистрироваться
+        </Button>
       </form>
 
-      <p className="muted">
+      <p className="auth-footer muted">
         Уже есть аккаунт? <Link to="/login">Войти</Link>
       </p>
     </section>

@@ -1,3 +1,5 @@
+import { Clock } from 'lucide-react'
+
 import { dayRange, formatTime } from '../utils/dates'
 
 const HOUR_MARKS = [0, 3, 6, 9, 12, 15, 18, 21, 24]
@@ -17,13 +19,13 @@ export function DaySchedule({ date, slots }) {
   const dayLength = new Date(range.end) - dayStart
 
   return (
-    <div className="schedule">
-      <div className="day-bar" aria-hidden="true">
+    <div>
+      <div className="schedule-bar" aria-hidden="true">
         {slots.map((slot) => (
-          <span key={slot.start_time} className="day-bar-busy" style={slotPosition(slot, dayStart, dayLength)} />
+          <span key={slot.start_time} className="schedule-busy" style={slotPosition(slot, dayStart, dayLength)} />
         ))}
       </div>
-      <div className="day-bar-hours" aria-hidden="true">
+      <div className="schedule-hours" aria-hidden="true">
         {HOUR_MARKS.map((hour) => (
           <span key={hour}>{String(hour).padStart(2, '0')}</span>
         ))}
@@ -32,10 +34,11 @@ export function DaySchedule({ date, slots }) {
       {slots.length === 0 ? (
         <p className="muted">В этот день комната свободна.</p>
       ) : (
-        <ul className="slot-list" aria-label="Занятое время">
+        <ul className="slot-chips" aria-label="Занятое время">
           {slots.map((slot) => (
-            <li key={slot.start_time}>
-              Занято: {formatTime(slot.start_time)} – {formatTime(slot.end_time)}
+            <li key={slot.start_time} className="slot-chip">
+              <Clock size={13} aria-hidden="true" />
+              Занято {formatTime(slot.start_time)} – {formatTime(slot.end_time)}
             </li>
           ))}
         </ul>

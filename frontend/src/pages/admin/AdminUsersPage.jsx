@@ -2,6 +2,7 @@ import { useCallback, useState } from 'react'
 
 import { changeRole, listUsers } from '../../api/users'
 import { ErrorMessage, SuccessMessage } from '../../components/ErrorMessage'
+import { LoadingState } from '../../components/States'
 import { useAuth } from '../../context/AuthContext'
 import { useAsync } from '../../hooks/useAsync'
 
@@ -28,19 +29,19 @@ export function AdminUsersPage() {
   }
 
   return (
-    <section>
-      <h1>Пользователи</h1>
+    <div className="page">
+      <p className="muted">Администраторы могут управлять комнатами и ролями. Свою роль изменить нельзя.</p>
 
       <ErrorMessage error={error ?? actionError} />
       <SuccessMessage>{message}</SuccessMessage>
-      {loading && !data && <p className="muted">Загрузка…</p>}
+      {loading && !data && <LoadingState />}
 
       {data && (
-        <div className="card table-wrap">
-          <table>
+        <div className="card card-flush table-wrap">
+          <table className="table">
             <thead>
               <tr>
-                <th scope="col">Логин</th>
+                <th scope="col">Пользователь</th>
                 <th scope="col">Email</th>
                 <th scope="col">Роль</th>
               </tr>
@@ -48,11 +49,22 @@ export function AdminUsersPage() {
             <tbody>
               {data.items.map((user) => (
                 <tr key={user.id}>
-                  <td>{user.login}</td>
-                  <td>{user.email}</td>
+                  <td>
+                    <span className="person">
+                      <span className="avatar" aria-hidden="true">
+                        {user.login.slice(0, 1)}
+                      </span>
+                      <span>
+                        {user.login}
+                        {user.id === currentUser.id && <span className="muted small"> (вы)</span>}
+                      </span>
+                    </span>
+                  </td>
+                  <td className="cell-secondary">{user.email}</td>
                   <td>
                     {/* The backend forbids admins to change their own role, so the control is disabled. */}
                     <select
+                      className="input role-select"
                       aria-label={`Роль пользователя ${user.login}`}
                       value={user.role}
                       disabled={user.id === currentUser.id}
@@ -69,13 +81,14 @@ export function AdminUsersPage() {
               ))}
             </tbody>
           </table>
-          {data.total > data.items.length && (
-            <p className="muted">
-              Показаны первые {data.items.length} из {data.total}.
-            </p>
-          )}
         </div>
       )}
-    </section>
+
+      {data && data.total > data.items.length && (
+        <p className="muted small">
+          Показаны первые {data.items.length} из {data.total}.
+        </p>
+      )}
+    </div>
   )
 }

@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom'
 
+import { Button } from '../components/Button'
 import { ErrorMessage } from '../components/ErrorMessage'
 import { useAuth } from '../context/AuthContext'
 
@@ -39,28 +40,29 @@ export function LoginPage() {
   }
 
   return (
-    <section className="card narrow">
+    <section className="card auth-card">
       <h1>Вход</h1>
+      <p className="muted">Войдите, чтобы бронировать комнаты.</p>
 
       <form onSubmit={handleSubmit} className="form">
-        <label>
+        <label className="field">
           Логин или email
-          <input name="loginOrEmail" value={form.loginOrEmail} onChange={updateField} required minLength={3} autoComplete="username" />
+          <input className="input" name="loginOrEmail" value={form.loginOrEmail} onChange={updateField} required minLength={3} autoComplete="username" />
         </label>
 
-        <label>
+        <label className="field">
           Пароль
-          <input name="password" type="password" value={form.password} onChange={updateField} required autoComplete="current-password" />
+          <input className="input" name="password" type="password" value={form.password} onChange={updateField} required autoComplete="current-password" />
         </label>
 
         <ErrorMessage error={error} />
 
-        <button type="submit" disabled={submitting}>
-          {submitting ? 'Входим…' : 'Войти'}
-        </button>
+        <Button type="submit" variant="primary" block loading={submitting}>
+          Войти
+        </Button>
       </form>
 
-      <p className="muted">
+      <p className="auth-footer muted">
         Нет аккаунта? <Link to="/register">Зарегистрироваться</Link>
       </p>
     </section>

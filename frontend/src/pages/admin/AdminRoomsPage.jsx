@@ -1,14 +1,19 @@
 import { useCallback, useState } from 'react'
+import { Building2, Pencil, Plus, Trash2 } from 'lucide-react'
 
 import { createRoom, deleteRoom, listRooms, updateRoom } from '../../api/rooms'
+import { Button } from '../../components/Button'
 import { ErrorMessage, SuccessMessage } from '../../components/ErrorMessage'
 import { RoomForm } from '../../components/RoomForm'
+import { EmptyState, LoadingState } from '../../components/States'
 import { useAsync } from '../../hooks/useAsync'
 
 const ROOMS_LIMIT = 100
+const COLUMNS = 4
 
-function AdminRoomItem({ room, onChanged, onMessage }) {
+function RoomRow({ room, onChanged, onMessage }) {
   const [editing, setEditing] = useState(false)
+  const [deleting, setDeleting] = useState(false)
   const [error, setError] = useState(null)
 
   async function handleUpdate(values) {
@@ -16,7 +21,7 @@ function AdminRoomItem({ room, onChanged, onMessage }) {
     await updateRoom(room.id, values)
     setEditing(false)
     onMessage(`Комната «${values.name}» сохранена`)
-    await onChanged()
+    onChanged()
   }
 
   async function handleDelete() {
@@ -26,41 +31,47 @@ function AdminRoomItem({ room, onChanged, onMessage }) {
 
     setError(null)
     onMessage(null)
+    setDeleting(true)
 
     try {
       await deleteRoom(room.id)
       onMessage(`Комната «${room.name}» удалена`)
-      await onChanged()
+      onChanged()
     } catch (err) {
       setError(err)
+      setDeleting(false)
     }
   }
 
   if (editing) {
     return (
-      <li className="card">
-        <RoomForm initialRoom={room} submitLabel="Сохранить" onSubmit={handleUpdate} onCancel={() => setEditing(false)} />
-      </li>
+      <tr className="admin-edit-row">
+        <td colSpan={COLUMNS}>
+          <RoomForm initialRoom={room} submitLabel="Сохранить" onSubmit={handleUpdate} onCancel={() => setEditing(false)} />
+        </td>
+      </tr>
     )
   }
 
   return (
-    <li className="card admin-row">
-      <div>
+    <tr>
+      <td>
         <strong>{room.name}</strong>
-        <span className="muted"> · {room.capacity} чел.</span>
-        {room.description && <p className="muted">{room.description}</p>}
-      </div>
-      <div className="form-actions">
-        <button type="button" className="button-secondary" onClick={() => setEditing(true)}>
-          Изменить
-        </button>
-        <button type="button" className="button-danger" onClick={handleDelete}>
-          Удалить
-        </button>
-      </div>
-      <ErrorMessage error={error} />
-    </li>
+        {error && <ErrorMessage error={error} />}
+      </td>
+      <td>{room.capacity}</td>
+      <td className="cell-secondary">{room.description || '—'}</td>
+      <td className="cell-actions">
+        <div className="actions">
+          <Button size="sm" variant="ghost" iconOnly icon={Pencil} onClick={() => setEditing(true)} title="Изменить">
+            Изменить {room.name}
+          </Button>
+          <Button size="sm" variant="ghost" iconOnly icon={Trash2} loading={deleting} onClick={handleDelete} title="Удалить">
+            Удалить {room.name}
+          </Button>
+        </div>
+      </td>
+    </tr>
   )
 }
 
@@ -68,40 +79,71 @@ export function AdminRoomsPage() {
   const load = useCallback(() => listRooms({ limit: ROOMS_LIMIT }), [])
   const { data, error, loading, reload } = useAsync(load)
   const [message, setMessage] = useState(null)
-  // Changing the key remounts the create form, clearing it after success.
-  const [createFormKey, setCreateFormKey] = useState(0)
+  const [creating, setCreating] = useState(false)
 
   async function handleCreate(values) {
     setMessage(null)
     const room = await createRoom(values)
     setMessage(`Комната «${room.name}» создана`)
-    setCreateFormKey((key) => key + 1)
-    await reload()
+    setCreating(false)
+    reload()
   }
 
   return (
-    <section>
-      <h1>Управление комнатами</h1>
-
-      <div className="card">
-        <h2>Новая комната</h2>
-        <RoomForm key={createFormKey} submitLabel="Создать" onSubmit={handleCreate} />
+    <div className="page">
+      <div className="page-intro">
+        <p className="muted">Комнаты, доступные для бронирования. Удалить можно только комнату без предстоящих броней.</p>
+        {!creating && (
+          <Button variant="primary" icon={Plus} onClick={() => setCreating(true)}>
+            Новая комната
+          </Button>
+        )}
       </div>
+
+      {creating && (
+        <section className="card">
+          <h2 className="card-header">Новая комната</h2>
+          <RoomForm submitLabel="Создать" onSubmit={handleCreate} onCancel={() => setCreating(false)} />
+        </section>
+      )}
 
       <SuccessMessage>{message}</SuccessMessage>
       <ErrorMessage error={error} />
-      {loading && !data && <p className="muted">Загрузка…</p>}
+      {loading && !data && <LoadingState />}
 
-      <ul className="admin-list">
-        {data?.items.map((room) => (
-          <AdminRoomItem key={room.id} room={room} onChanged={reload} onMessage={setMessage} />
-        ))}
-      </ul>
+      {data && data.items.length === 0 && (
+        <div className="card">
+          <EmptyState icon={Building2} title="Комнат пока нет" text="Создайте первую комнату." />
+        </div>
+      )}
+
+      {data && data.items.length > 0 && (
+        <div className="card card-flush table-wrap">
+          <table className="table">
+            <thead>
+              <tr>
+                <th scope="col">Название</th>
+                <th scope="col">Мест</th>
+                <th scope="col">Описание</th>
+                <th scope="col">
+                  <span className="visually-hidden">Действия</span>
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {data.items.map((room) => (
+                <RoomRow key={room.id} room={room} onChanged={reload} onMessage={setMessage} />
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+
       {data && data.total > data.items.length && (
-        <p className="muted">
+        <p className="muted small">
           Показаны первые {data.items.length} из {data.total}.
         </p>
       )}
-    </section>
+    </div>
   )
 }

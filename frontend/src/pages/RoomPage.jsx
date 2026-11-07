@@ -1,13 +1,24 @@
 import { useCallback, useState } from 'react'
+import { ArrowLeft, DoorOpen, UsersRound } from 'lucide-react'
 import { Link, useParams } from 'react-router-dom'
 
 import { createBooking } from '../api/bookings'
 import { getBusySlots, getRoom } from '../api/rooms'
 import { DaySchedule } from '../components/DaySchedule'
 import { ErrorMessage, SuccessMessage } from '../components/ErrorMessage'
+import { LoadingState } from '../components/States'
 import { TimeRangeForm } from '../components/TimeRangeForm'
 import { useAsync } from '../hooks/useAsync'
 import { dayRange, formatDate, formatTime, todayInput } from '../utils/dates'
+
+function BackLink() {
+  return (
+    <Link to="/rooms" className="back-link">
+      <ArrowLeft size={14} aria-hidden="true" />
+      Все комнаты
+    </Link>
+  )
+}
 
 export function RoomPage() {
   const { roomId } = useParams()
@@ -35,48 +46,72 @@ export function RoomPage() {
     setSuccess(null)
     const booking = await createBooking(Number(roomId), start.toISOString(), end.toISOString())
     setSuccess(`Забронировано: ${formatDate(booking.start_time)}, ${formatTime(booking.start_time)} – ${formatTime(booking.end_time)}`)
-    await slots.reload()
+    slots.reload()
   }
 
   if (room.error) {
     return (
-      <section>
+      <div className="page">
+        <BackLink />
         <ErrorMessage error={room.error} />
-        <Link to="/">← К списку комнат</Link>
-      </section>
+      </div>
     )
   }
 
   if (!room.data) {
-    return <p className="muted">Загрузка…</p>
+    return <LoadingState />
   }
 
   return (
-    <section>
-      <Link to="/" className="muted">
-        ← К списку комнат
-      </Link>
-      <h1>{room.data.name}</h1>
-      <p className="muted">Вместимость: {room.data.capacity} чел.</p>
-      {room.data.description && <p>{room.data.description}</p>}
+    <div className="page">
+      <BackLink />
 
-      <div className="card">
-        <label className="inline-label">
-          День
-          <input type="date" value={date} onChange={handleDateChange} required />
-        </label>
-
-        <ErrorMessage error={slots.error} />
-        {slots.data ? <DaySchedule date={date} slots={slots.data} /> : !slots.error && <p className="muted">Загрузка расписания…</p>}
+      <div className="room-hero">
+        <span className="icon-tile" aria-hidden="true">
+          <DoorOpen size={20} />
+        </span>
+        <div>
+          <h2>{room.data.name}</h2>
+          <span className="room-meta">
+            <UsersRound size={14} aria-hidden="true" />
+            до {room.data.capacity} чел.
+            {room.data.description && ` · ${room.data.description}`}
+          </span>
+        </div>
       </div>
 
-      <div className="card">
-        <h2>Забронировать на {formatDate(`${date}T00:00`)}</h2>
-        <p className="muted">Не дольше 5 часов. Брони «встык» разрешены. Если конец раньше начала — бронь до следующего дня.</p>
-        {/* key: a new day resets the form to that day */}
-        <TimeRangeForm key={date} initialDate={date} showDate={false} submitLabel="Забронировать" onSubmit={handleBook} />
-        <SuccessMessage>{success}</SuccessMessage>
+      <div className="booking-layout">
+        <section className="card">
+          <div className="card-header">
+            <h2>Расписание</h2>
+            <input
+              className="input input-auto"
+              type="date"
+              aria-label="День расписания"
+              value={date}
+              onChange={handleDateChange}
+              required
+            />
+          </div>
+
+          <ErrorMessage error={slots.error} />
+          {slots.data ? <DaySchedule date={date} slots={slots.data} /> : !slots.error && <LoadingState inline text="Загрузка расписания…" />}
+        </section>
+
+        <section className="card">
+          <h2>Новая бронь</h2>
+          <p className="muted small form-note">
+            {formatDate(`${date}T00:00`)} · не дольше 5 часов. Если конец раньше начала — бронь до следующего дня.
+          </p>
+          {/* key: a new day resets the form to that day */}
+          <TimeRangeForm key={date} initialDate={date} showDate={false} submitLabel="Забронировать" onSubmit={handleBook} />
+          {success && (
+            <div className="after-form">
+              <SuccessMessage>{success}</SuccessMessage>
+            </div>
+          )}
+        </section>
       </div>
-    </section>
+    </div>
   )
 }

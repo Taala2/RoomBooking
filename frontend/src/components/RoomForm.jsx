@@ -1,5 +1,6 @@
 import { useState } from 'react'
 
+import { Button } from './Button'
 import { ErrorMessage } from './ErrorMessage'
 
 const EMPTY_ROOM = { name: '', capacity: 10, description: '' }
@@ -66,30 +67,32 @@ export function RoomForm({ initialRoom = EMPTY_ROOM, submitLabel, onSubmit, onCa
   return (
     <form onSubmit={handleSubmit} className="form" noValidate>
       <div className="form-row">
-        <label>
+        <label className="field">
           Название
-          <input name="name" value={values.name} onChange={updateField} required />
+          <input className="input" name="name" value={values.name} onChange={updateField} required />
         </label>
-        <label>
+        <label className="field">
           Вместимость
-          <input name="capacity" type="number" min={1} max={100} value={values.capacity} onChange={updateField} required />
+          <input className="input" name="capacity" type="number" min={1} max={100} value={values.capacity} onChange={updateField} required />
         </label>
       </div>
-      <label>
-        Описание
-        <textarea name="description" rows={2} value={values.description} onChange={updateField} />
+      <label className="field">
+        <span>
+          Описание <span className="field-hint">(необязательно)</span>
+        </span>
+        <textarea className="input" name="description" rows={2} value={values.description} onChange={updateField} />
       </label>
 
       <ErrorMessage error={error} />
 
-      <div className="form-actions">
-        <button type="submit" disabled={submitting}>
-          {submitting ? 'Сохраняем…' : submitLabel}
-        </button>
+      <div className="actions">
+        <Button type="submit" variant="primary" loading={submitting}>
+          {submitLabel}
+        </Button>
         {onCancel && (
-          <button type="button" className="button-secondary" onClick={onCancel}>
+          <Button variant="ghost" onClick={onCancel}>
             Отмена
-          </button>
+          </Button>
         )}
       </div>
     </form>

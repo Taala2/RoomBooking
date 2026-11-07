@@ -1,28 +1,21 @@
 import { useState } from 'react'
+import { CalendarCheck, Clock, Pencil, X } from 'lucide-react'
 import { Link } from 'react-router-dom'
 
-import { cancelBooking, changeBooking, listMyBookings } from '../api/bookings'
-import { listRooms } from '../api/rooms'
+import { cancelBooking, changeBooking, listMyBookingsWithRooms } from '../api/bookings'
+import { Button } from '../components/Button'
+import { DateTile } from '../components/DateTile'
 import { ErrorMessage } from '../components/ErrorMessage'
+import { EmptyState, LoadingState } from '../components/States'
+import { StatusBadge } from '../components/StatusBadge'
 import { TimeRangeForm } from '../components/TimeRangeForm'
 import { useAsync } from '../hooks/useAsync'
+import { isUpcoming } from '../utils/bookings'
 import { formatDate, formatTime, toDateInput, toTimeInput } from '../utils/dates'
-
-const ROOMS_LIMIT = 100
-
-async function loadBookingsWithRooms() {
-  const [bookings, rooms] = await Promise.all([listMyBookings(), listRooms({ limit: ROOMS_LIMIT })])
-  const roomNames = Object.fromEntries(rooms.items.map((room) => [room.id, room.name]))
-
-  return { bookings, roomNames }
-}
-
-function isUpcoming(booking) {
-  return booking.status === 'active' && new Date(booking.end_time) > new Date()
-}
 
 function BookingItem({ booking, roomName, onChanged }) {
   const [moving, setMoving] = useState(false)
+  const [canceling, setCanceling] = useState(false)
   const [error, setError] = useState(null)
   const start = new Date(booking.start_time)
   const end = new Date(booking.end_time)
@@ -34,46 +27,54 @@ function BookingItem({ booking, roomName, onChanged }) {
     }
 
     setError(null)
+    setCanceling(true)
 
     try {
       await cancelBooking(booking.id)
-      await onChanged()
+      onChanged()
     } catch (err) {
       setError(err)
+    } finally {
+      setCanceling(false)
     }
   }
 
   async function handleMove(newStart, newEnd) {
     await changeBooking(booking.id, newStart.toISOString(), newEnd.toISOString())
     setMoving(false)
-    await onChanged()
+    onChanged()
   }
 
   return (
-    <li className="card booking">
-      <div className="booking-info">
-        <Link to={`/rooms/${booking.room_id}`}>
-          <strong>{roomName}</strong>
+    <li className={`card booking-row${upcoming ? '' : ' is-past'}`}>
+      <DateTile iso={booking.start_time} />
+
+      <div className="booking-main">
+        <Link to={`/rooms/${booking.room_id}`} className="booking-room">
+          {roomName}
         </Link>
-        <span>
+        <span className="booking-time">
+          <Clock size={13} aria-hidden="true" />
           {formatDate(booking.start_time)}, {formatTime(booking.start_time)} – {formatTime(booking.end_time)}
         </span>
-        <span className={`badge badge-${booking.status}`}>{booking.status === 'active' ? 'активна' : 'отменена'}</span>
       </div>
 
+      <StatusBadge booking={booking} />
+
       {upcoming && !moving && (
-        <div className="form-actions">
-          <button type="button" className="button-secondary" onClick={() => setMoving(true)}>
+        <div className="actions">
+          <Button size="sm" icon={Pencil} onClick={() => setMoving(true)}>
             Перенести
-          </button>
-          <button type="button" className="button-danger" onClick={handleCancel}>
+          </Button>
+          <Button size="sm" variant="danger" icon={X} loading={canceling} onClick={handleCancel}>
             Отменить
-          </button>
+          </Button>
         </div>
       )}
 
       {moving && (
         <TimeRangeForm
+          inline
           initialDate={toDateInput(start)}
           initialStart={toTimeInput(start)}
           initialEnd={toTimeInput(end)}
@@ -88,48 +89,72 @@ function BookingItem({ booking, roomName, onChanged }) {
   )
 }
 
+function BookingSection({ title, bookings, roomNames, onChanged, empty }) {
+  return (
+    <section>
+      <div className="section-title">
+        <h2>{title}</h2>
+        <span className="count">{bookings.length}</span>
+      </div>
+
+      {bookings.length === 0 ? (
+        empty
+      ) : (
+        <ul className="booking-list">
+          {bookings.map((booking) => (
+            <BookingItem
+              key={booking.id}
+              booking={booking}
+              roomName={roomNames[booking.room_id] ?? `Комната #${booking.room_id}`}
+              onChanged={onChanged}
+            />
+          ))}
+        </ul>
+      )}
+    </section>
+  )
+}
+
 export function MyBookingsPage() {
-  const { data, error, loading, reload } = useAsync(loadBookingsWithRooms)
+  const { data, error, loading, reload } = useAsync(listMyBookingsWithRooms)
 
   if (error) {
     return <ErrorMessage error={error} />
   }
 
   if (loading && !data) {
-    return <p className="muted">Загрузка…</p>
+    return <LoadingState />
   }
 
   const upcoming = data.bookings.filter(isUpcoming)
   const history = data.bookings.filter((booking) => !isUpcoming(booking)).reverse()
 
-  function renderList(bookings, emptyText) {
-    if (bookings.length === 0) {
-      return <p className="muted">{emptyText}</p>
-    }
-
-    return (
-      <ul className="booking-list">
-        {bookings.map((booking) => (
-          <BookingItem
-            key={booking.id}
-            booking={booking}
-            roomName={data.roomNames[booking.room_id] ?? `Комната #${booking.room_id}`}
-            onChanged={reload}
-          />
-        ))}
-      </ul>
-    )
-  }
-
   return (
-    <section>
-      <h1>Мои брони</h1>
+    <div className="page">
+      <BookingSection
+        title="Предстоящие"
+        bookings={upcoming}
+        roomNames={data.roomNames}
+        onChanged={reload}
+        empty={
+          <div className="card">
+            <EmptyState
+              icon={CalendarCheck}
+              title="Предстоящих броней нет"
+              text="Выберите комнату и свободное время."
+              action={<Link to="/rooms" className="button button-primary">Забронировать</Link>}
+            />
+          </div>
+        }
+      />
 
-      <h2>Предстоящие</h2>
-      {renderList(upcoming, 'Предстоящих броней нет.')}
-
-      <h2>Прошедшие и отменённые</h2>
-      {renderList(history, 'Пока пусто.')}
-    </section>
+      <BookingSection
+        title="История"
+        bookings={history}
+        roomNames={data.roomNames}
+        onChanged={reload}
+        empty={<p className="muted">Прошедших и отменённых броней пока нет.</p>}
+      />
+    </div>
   )
 }
