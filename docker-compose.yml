@@ -22,9 +22,20 @@ services:
       DATABASE_URL: postgresql+psycopg2://postgres:postgres@db:5432/room_booking
       # Taken from .env next to this file (copy .env.example to .env).
       SECRET_KEY: ${SECRET_KEY:?set SECRET_KEY in .env}
-      CORS_ORIGINS: ${CORS_ORIGINS:-[]}
+      # The frontend below is served on :5173, same as the Vite dev server.
+      CORS_ORIGINS: ${CORS_ORIGINS:-["http://localhost:5173"]}
     ports:
       - "8000:8000"
+
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        VITE_API_URL: http://localhost:8000
+    depends_on:
+      - api
+    ports:
+      - "5173:80"
 
 volumes:
   db_data:

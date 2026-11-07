@@ -17,9 +17,15 @@ REST API для бронирования переговорных комнат. 
 ```bash
 cp .env.example .env          # и замените SECRET_KEY на свой (см. ниже), иначе API не стартует
 docker compose up --build
+
+# первый администратор и демо-комнаты (пароль спросит скрипт)
+docker compose exec api python -m scripts.seed --login admin --email admin@example.com
 ```
 
-API: http://localhost:8000, документация Swagger: http://localhost:8000/docs.
+- Интерфейс: http://localhost:5173
+- API: http://localhost:8000, документация Swagger: http://localhost:8000/docs
+
+Поднимаются три контейнера: `db` (PostgreSQL), `api` (FastAPI) и `frontend` (собранный React, отдаёт nginx).
 
 При старте контейнер `api` сам применяет миграции (`alembic upgrade head`). У контейнера своя база в volume `db_data`; остановить и удалить её: `docker compose down -v`.
 
@@ -58,18 +64,23 @@ python -c "import secrets; print(secrets.token_urlsafe(32))"
 
 ### Первый администратор
 
-Регистрация всегда создаёт обычного пользователя, а роль меняет только администратор. Первого администратора назначьте вручную:
+Регистрация всегда создаёт обычного пользователя, а роль меняет только администратор. Первого администратора создаёт скрипт `scripts/seed.py`:
 
 ```bash
-# Docker
-docker compose exec db psql -U postgres -d room_booking -c "UPDATE users SET role = 'ADMIN' WHERE login = 'your_login'"
+python -m scripts.seed --login admin --email admin@example.com             # локально
+docker compose exec api python -m scripts.seed --login admin --email admin@example.com   # Docker
 ```
 
-В базе enum хранится по именам (`'ADMIN'`, `'USER'`), в API — значениями (`"admin"`, `"user"`).
+- пароль скрипт спрашивает (или берёт из `SEED_ADMIN_PASSWORD`), правила те же, что при регистрации;
+- если пользователь с таким логином или email уже есть — он получает роль администратора;
+- демо-комнаты добавляются, только если комнат ещё нет (`--no-rooms` — не добавлять);
+- повторный запуск ничего не дублирует.
 
 ## Frontend
 
 Веб-интерфейс на React + Vite — в папке [`frontend/`](frontend/README.md): каталог комнат, расписание комнаты на день с формой брони, «Мои брони» (перенос и отмена), для администратора — управление комнатами и ролями.
+
+В Docker frontend поднимается вместе с API (см. «Быстрый старт»). Для разработки с горячей перезагрузкой:
 
 ```bash
 # в .env backend: CORS_ORIGINS=["http://localhost:5173"]
@@ -142,7 +153,8 @@ rooms/       rooms_*  — та же структура
 bookings/    bookings_* — та же структура
 alembic/     миграции схемы
 tests/       unit, services, api, concurrency
-frontend/    веб-интерфейс (React + Vite)
+frontend/    веб-интерфейс (React + Vite), Dockerfile со сборкой и nginx
+scripts/     seed.py — первый администратор и демо-комнаты
 ```
 
 - Роутеры тонкие: принимают и валидируют запрос, вызывают сервис.
