@@ -67,6 +67,18 @@ docker compose exec db psql -U postgres -d room_booking -c "UPDATE users SET rol
 
 В базе enum хранится по именам (`'ADMIN'`, `'USER'`), в API — значениями (`"admin"`, `"user"`).
 
+## Frontend
+
+Веб-интерфейс на React + Vite — в папке [`frontend/`](frontend/README.md): каталог комнат, расписание комнаты на день с формой брони, «Мои брони» (перенос и отмена), для администратора — управление комнатами и ролями.
+
+```bash
+# в .env backend: CORS_ORIGINS=["http://localhost:5173"]
+cd frontend
+cp .env.example .env
+npm install
+npm run dev               # http://localhost:5173
+```
+
 ## Эндпоинты
 
 Авторизация — заголовок `Authorization: Bearer <access_token>`, токен выдаёт `POST /users/auth/login`.
@@ -130,6 +142,7 @@ rooms/       rooms_*  — та же структура
 bookings/    bookings_* — та же структура
 alembic/     миграции схемы
 tests/       unit, services, api, concurrency
+frontend/    веб-интерфейс (React + Vite)
 ```
 
 - Роутеры тонкие: принимают и валидируют запрос, вызывают сервис.
