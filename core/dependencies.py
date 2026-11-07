@@ -43,6 +43,11 @@ def get_current_user(
 
     return user
 
+Current_user = Annotated[
+    User,
+    Depends(get_current_user)
+]
+
 def get_current_admin(current_user: Current_user) -> User:
     if current_user.role != UserRole.ADMIN:
         raise HTTPException(
@@ -51,11 +56,6 @@ def get_current_admin(current_user: Current_user) -> User:
         )
 
     return current_user
-
-Current_user = Annotated[
-    User,
-    Depends(get_current_user)
-]
 
 Current_admin = Annotated[
     User,

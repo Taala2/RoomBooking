@@ -21,7 +21,7 @@ def create_booking_service(
     room = get_room_by_id(db, room_id)
 
     if not room:
-        raise RoomNotFoundError("Комната не найдено")
+        raise RoomNotFoundError("Комната не найдена")
 
     conflict_booking = get_conflict_booking(
         db=db,

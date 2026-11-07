@@ -6,7 +6,7 @@ from pydantic import BaseModel
 
 class BookingStatus(str, Enum):
     ACTIVE = 'active'
-    CANCELED = 'complated'
+    CANCELED = 'canceled'
 
 class BookingRequest(BaseModel):
     room_id: int
