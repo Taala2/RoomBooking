@@ -13,33 +13,37 @@ from users.users_schemas import UserRole
 
 security = HTTPBearer()
 
+def unauthorized(detail: str) -> HTTPException:
+    return HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail=detail,
+        headers={"WWW-Authenticate": "Bearer"}
+    )
+
 def get_current_user(
         credential: HTTPAuthorizationCredentials = Depends(security),
         session: Session = Depends(get_db)
     ) -> User:
     token = credential.credentials
 
-    payload = jwt.decode(
-        token,
-        SECRET_KEY,
-        algorithms=[ALGORITHM]
-    )
+    try:
+        payload = jwt.decode(
+            token,
+            SECRET_KEY,
+            algorithms=[ALGORITHM]
+        )
+    except jwt.InvalidTokenError:
+        raise unauthorized("Токен недействителен или истёк")
 
     user_id = payload.get("sub")
 
-    if user_id is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Токен не действителен"
-        )
+    if not isinstance(user_id, str) or not user_id.isdigit():
+        raise unauthorized("Токен недействителен или истёк")
 
-    user = get_user_by_id(session, user_id)
+    user = get_user_by_id(session, int(user_id))
 
     if not user:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Пользователь не найден"
-        )
+        raise unauthorized("Пользователь не найден")
 
     return user
 

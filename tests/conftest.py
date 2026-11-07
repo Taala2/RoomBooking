@@ -5,12 +5,15 @@ from pathlib import Path
 import pytest
 from alembic import command
 from alembic.config import Config
+from fastapi.testclient import TestClient
 from sqlalchemy import URL, create_engine, make_url, text
 from sqlalchemy.orm import Session, sessionmaker
 
-import bookings.bookings_models  # noqa: F401
 from core.config import settings
+from core.database import get_db
+from main import app
 from tests.factories import make_room, make_user
+from users.users_schemas import UserRole
 
 ALEMBIC_INI = Path(__file__).resolve().parent.parent / "alembic.ini"
 
@@ -79,6 +82,17 @@ def db(test_engine):
 
 
 @pytest.fixture
+def client(db):
+    """API client whose requests use the rolled-back test session."""
+    app.dependency_overrides[get_db] = lambda: db
+
+    with TestClient(app) as test_client:
+        yield test_client
+
+    app.dependency_overrides.clear()
+
+
+@pytest.fixture
 def session_factory(test_engine):
     """Independent sessions with real commits; tables are truncated afterwards."""
     yield sessionmaker(bind=test_engine, autoflush=False)
@@ -102,6 +116,11 @@ def user(db):
 @pytest.fixture
 def other_user(db):
     return make_user(db, "other_user")
+
+
+@pytest.fixture
+def admin(db):
+    return make_user(db, "admin", UserRole.ADMIN)
 
 
 @pytest.fixture
