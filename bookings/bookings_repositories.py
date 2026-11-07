@@ -47,6 +47,6 @@ def get_conflict_booking(
     if exclude_booking_id:
         stmt = stmt.where(Booking.id != exclude_booking_id)
 
-    result = db.execute(stmt).scalar_one_or_none()
+    result = db.execute(stmt.limit(1)).scalars().first()
 
     return result

@@ -14,10 +14,12 @@ pytestmark = pytest.mark.concurrency
 
 PARALLEL_REQUESTS = 2
 BARRIER_TIMEOUT_SECONDS = 10
+HOUR = timedelta(hours=1)
 
 
-def pause_after_conflict_check(monkeypatch, barrier):
-    """Make every request finish the conflict check before anyone inserts."""
+def pause_after_conflict_check(monkeypatch):
+    """Make every request finish the conflict check before anyone saves."""
+    barrier = threading.Barrier(PARALLEL_REQUESTS, timeout=BARRIER_TIMEOUT_SECONDS)
     original = bookings_services.get_conflict_booking
 
     def check_then_wait(*args, **kwargs):
@@ -28,47 +30,93 @@ def pause_after_conflict_check(monkeypatch, barrier):
     monkeypatch.setattr(bookings_services, "get_conflict_booking", check_then_wait)
 
 
-@pytest.mark.xfail(strict=True, reason="race condition in create_booking_service: fixed in stage 5")
-def test_parallel_bookings_of_same_slot_create_only_one(session_factory, monkeypatch, tomorrow):
-    with session_factory() as setup:
-        user_id = make_user(setup, "racer").id
-        room_id = make_room(setup).id
-
-    pause_after_conflict_check(
-        monkeypatch,
-        threading.Barrier(PARALLEL_REQUESTS, timeout=BARRIER_TIMEOUT_SECONDS)
-    )
+def run_in_parallel(session_factory, action):
+    """Call action(session, index) in separate threads and sessions, collect outcomes."""
     results = []
 
-    def try_to_book():
+    def worker(index):
         with session_factory() as session:
             try:
-                bookings_services.create_booking_service(
-                    db=session,
-                    user_id=user_id,
-                    room_id=room_id,
-                    start_time=tomorrow,
-                    end_time=tomorrow + timedelta(hours=1)
-                )
-                results.append("created")
+                action(session, index)
+                results.append("saved")
             except BookingConflictError:
                 results.append("conflict")
             except Exception as exc:
-                results.append(type(exc).__name__)
+                pgcode = getattr(getattr(exc, "orig", None), "pgcode", None)
+                results.append(f"{type(exc).__name__}:{pgcode}")
 
-    threads = [threading.Thread(target=try_to_book) for _ in range(PARALLEL_REQUESTS)]
+    threads = [threading.Thread(target=worker, args=(i,)) for i in range(PARALLEL_REQUESTS)]
     for thread in threads:
         thread.start()
     for thread in threads:
         thread.join(timeout=BARRIER_TIMEOUT_SECONDS * 2)
 
-    with session_factory() as check:
-        active_count = check.scalar(
+    return sorted(results)
+
+
+def count_active_bookings(session_factory, room_id, start, end):
+    with session_factory() as session:
+        return session.scalar(
             select(func.count()).select_from(Booking).where(
                 Booking.room_id == room_id,
-                Booking.status == BookingStatus.ACTIVE
+                Booking.status == BookingStatus.ACTIVE,
+                Booking.start_time < end,
+                Booking.end_time > start
             )
         )
 
-    assert sorted(results) == ["conflict", "created"]
-    assert active_count == 1
+
+def test_parallel_bookings_of_same_slot_create_only_one(session_factory, monkeypatch, tomorrow):
+    with session_factory() as setup:
+        user_id = make_user(setup, "racer").id
+        room_id = make_room(setup).id
+
+    pause_after_conflict_check(monkeypatch)
+
+    def create(session, _):
+        bookings_services.create_booking_service(
+            db=session,
+            user_id=user_id,
+            room_id=room_id,
+            start_time=tomorrow,
+            end_time=tomorrow + HOUR
+        )
+
+    results = run_in_parallel(session_factory, create)
+
+    assert results == ["conflict", "saved"]
+    assert count_active_bookings(session_factory, room_id, tomorrow, tomorrow + HOUR) == 1
+
+
+def test_parallel_changes_into_same_slot_save_only_one(session_factory, monkeypatch, tomorrow):
+    with session_factory() as setup:
+        room_id = make_room(setup).id
+        owners = []
+
+        for index in range(PARALLEL_REQUESTS):
+            user = make_user(setup, f"mover{index}")
+            booking = bookings_services.create_booking_service(
+                db=setup,
+                user_id=user.id,
+                room_id=room_id,
+                start_time=tomorrow + (2 * index + 2) * HOUR,
+                end_time=tomorrow + (2 * index + 3) * HOUR
+            )
+            owners.append((user.id, booking.id))
+
+    pause_after_conflict_check(monkeypatch)
+
+    def move_to_first_hour(session, index):
+        user_id, booking_id = owners[index]
+        bookings_services.change_booking_time_service(
+            db=session,
+            user_id=user_id,
+            booking_id=booking_id,
+            start_time=tomorrow,
+            end_time=tomorrow + HOUR
+        )
+
+    results = run_in_parallel(session_factory, move_to_first_hour)
+
+    assert results == ["conflict", "saved"]
+    assert count_active_bookings(session_factory, room_id, tomorrow, tomorrow + HOUR) == 1

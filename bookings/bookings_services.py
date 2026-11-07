@@ -1,5 +1,6 @@
 from datetime import UTC, datetime, timedelta
 
+from sqlalchemy.exc import DBAPIError
 from sqlalchemy.orm import Session
 
 from bookings.bookings_models import Booking
@@ -7,6 +8,11 @@ from bookings.bookings_repositories import create_booking, get_booking_by_id, ge
 from bookings.bookings_schemas import BookingStatus
 from core.exceptions import BookingAccessDeniedError, BookingAlreadyCanceledError, BookingConflictError, BookingNotFoundError, InvalidBookingTimeError, RoomNotFoundError
 from rooms.rooms_repositories import get_room_by_id
+
+BOOKING_CONFLICT_MESSAGE = "На введенное время текущая комната занята"
+# 23P01: overlap rejected by bookings_no_overlap.
+# 40P01: two overlapping writes waited for each other and Postgres aborted one.
+OVERLAP_ERROR_CODES = {"23P01", "40P01"}
 
 
 def create_booking_service(
@@ -31,7 +37,7 @@ def create_booking_service(
     )
 
     if conflict_booking:
-        raise BookingConflictError("На введенное время текущая комната занята")
+        raise BookingConflictError(BOOKING_CONFLICT_MESSAGE)
 
     new_booking = Booking(
         user_id=user_id,
@@ -40,7 +46,7 @@ def create_booking_service(
         end_time=end_time
     )
 
-    return create_booking(db, new_booking)
+    return save_without_overlap(db, create_booking, new_booking)
 
 def get_my_booking_service(db: Session, user_id: int):
     return get_booking_by_user_id(db, user_id)
@@ -72,12 +78,24 @@ def change_booking_time_service(
     )
 
     if conflict:
-        raise BookingConflictError("На введенное время текущая комната занята")
+        raise BookingConflictError(BOOKING_CONFLICT_MESSAGE)
 
     booking.start_time = start_time
     booking.end_time = end_time
 
-    return update_booking(db, booking)
+    return save_without_overlap(db, update_booking, booking)
+
+def save_without_overlap(db: Session, save, booking: Booking):
+    """Save a booking; a concurrent overlap rejected by the DB becomes a conflict."""
+    try:
+        return save(db, booking)
+    except DBAPIError as exc:
+        db.rollback()
+
+        if getattr(exc.orig, "pgcode", None) in OVERLAP_ERROR_CODES:
+            raise BookingConflictError(BOOKING_CONFLICT_MESSAGE) from exc
+
+        raise
 
 def validate_time(start_time: datetime, end_time: datetime):
     if start_time >= end_time:

@@ -2,6 +2,7 @@ from datetime import timedelta
 
 import pytest
 
+from bookings import bookings_services
 from bookings.bookings_schemas import BookingStatus
 from bookings.bookings_services import (
     cancel_booking_service,
@@ -69,13 +70,24 @@ def test_canceled_booking_does_not_block_slot(db, user, other_user, room, tomorr
     assert booking.status == BookingStatus.ACTIVE
 
 
-@pytest.mark.xfail(strict=True, reason="get_conflict_booking uses scalar_one_or_none: fixed in stage 5")
 def test_overlap_with_several_bookings_raises_conflict(db, user, other_user, room, tomorrow):
     book(db, user, room.id, tomorrow, tomorrow + HOUR)
     book(db, user, room.id, tomorrow + 2 * HOUR, tomorrow + 3 * HOUR)
 
     with pytest.raises(BookingConflictError):
         book(db, other_user, room.id, tomorrow, tomorrow + 4 * HOUR)
+
+
+def test_database_rejects_overlap_when_service_check_is_skipped(
+        db, user, other_user, room, tomorrow, monkeypatch
+):
+    book(db, user, room.id, tomorrow, tomorrow + 2 * HOUR)
+    monkeypatch.setattr(bookings_services, "get_conflict_booking", lambda **_: None)
+
+    with pytest.raises(BookingConflictError):
+        book(db, other_user, room.id, tomorrow + HOUR, tomorrow + 3 * HOUR)
+
+    assert len(get_my_booking_service(db, other_user.id)) == 0
 
 
 def test_change_booking_time_within_own_slot(db, user, room, tomorrow):
