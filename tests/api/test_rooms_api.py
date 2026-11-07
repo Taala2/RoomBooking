@@ -60,6 +60,10 @@ def test_list_rooms_returns_page(client, room):
     assert response.json()["total"] == 1
 
 
+def test_list_rejects_huge_offset(client):
+    assert client.get("/rooms/list", params={"offset": 10**20}).status_code == 422
+
+
 def test_list_keeps_order_after_update(client, db, admin):
     first = make_room(db, "Первая")
     second = make_room(db, "Вторая")

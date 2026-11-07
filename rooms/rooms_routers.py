@@ -2,7 +2,7 @@ from fastapi import APIRouter, Query, status
 
 from bookings.bookings_schemas import BusySlotResponse, UtcDatetime
 from bookings.bookings_services import get_room_busy_slots_service
-from core.dependencies import Current_admin, Current_session, Current_user
+from core.dependencies import Current_admin, Current_session, Current_user, Page_offset
 from rooms.rooms_schemas import ListRoomResponse, RoomChangeRequest, RoomRequest, RoomResponse
 from rooms.rooms_services import count_rooms_service, create_room_service, delete_room_service, get_room_service, get_rooms_service, update_room_service
 
@@ -24,7 +24,7 @@ def create_room_router(_: Current_admin, room: RoomRequest, db: Current_session)
 def list_rooms_router(
     db: Current_session,
     limit: int = Query(default=20, ge=1, le=100),
-    offset: int = Query(default=0, ge=0),
+    offset: Page_offset = 0,
 ):
     rooms = get_rooms_service(
         db=db,

@@ -1,8 +1,8 @@
 from fastapi import APIRouter, Query, status
 
-from core.dependencies import Current_admin, Current_session, Current_user
+from core.dependencies import Current_admin, Current_session, Current_user, Page_offset
 from core.security import create_access_token
-from users.users_schemas import ChangeUserRoleRequest, ChangeUserRoleRespone, ListUserResponse, TokenResponse, UserAuthenticateRequest, UserCreateRequest, UserCreateResponse, UserResponse
+from users.users_schemas import ChangeUserRoleRequest, ChangeUserRoleResponse, ListUserResponse, TokenResponse, UserAuthenticateRequest, UserCreateRequest, UserCreateResponse, UserResponse
 from users.users_services import authenticate_user_service, change_user_role_service, count_users_service, create_user_service, get_users_service
 
 
@@ -39,7 +39,7 @@ def list_users_router(
     _: Current_admin,
     db: Current_session,
     limit: int = Query(default=20, ge=1, le=100),
-    offset: int = Query(default=0, ge=0),
+    offset: Page_offset = 0,
 ):
     return {
         "items": get_users_service(db, limit, offset),
@@ -48,7 +48,7 @@ def list_users_router(
         "offset": offset,
     }
 
-@router.patch("/{user_id}/role", response_model=ChangeUserRoleRespone)
+@router.patch("/{user_id}/role", response_model=ChangeUserRoleResponse)
 def change_role_router(
     user_id: int,
     role: ChangeUserRoleRequest,

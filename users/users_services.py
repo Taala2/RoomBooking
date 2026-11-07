@@ -7,6 +7,10 @@ from users.users_models import User
 from users.users_repositories import count_users, create_user, get_user_by_id, get_user_by_login_or_email, get_users, update_user
 from users.users_schemas import UserRole
 
+# Checked when the login is unknown, so both failure paths take the same bcrypt time
+# and response timing does not reveal which logins exist.
+DUMMY_PASSWORD_HASH = hash_password("dummy-password-for-timing")
+
 LOGIN_TAKEN_MESSAGE = "Такой логин уже занят"
 EMAIL_TAKEN_MESSAGE = "Такая почта уже занята"
 
@@ -45,8 +49,11 @@ def raise_if_duplicate(exc: IntegrityError):
 def authenticate_user_service(db: Session, login_or_email: str, password: str):
     user = get_user_by_login_or_email(db, login_or_email, login_or_email)
 
-    # Same error for unknown login and wrong password: do not reveal which logins exist.
-    if not user or not verify_password(password, user.hashed_password):
+    # Same error and same work for unknown login and wrong password.
+    hashed_password = user.hashed_password if user else DUMMY_PASSWORD_HASH
+    password_ok = verify_password(password, hashed_password)
+
+    if not user or not password_ok:
         raise IncorrectPasswordError("Неверный логин или пароль")
 
     return user

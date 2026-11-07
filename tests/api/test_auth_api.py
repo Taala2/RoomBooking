@@ -55,6 +55,12 @@ def test_token_without_valid_sub_returns_401(client, payload):
     assert client.get(ME_URL, headers=bearer(make_token(payload))).status_code == 401
 
 
+def test_token_without_expiration_returns_401(client, user):
+    token = make_token({"sub": str(user.id)})
+
+    assert client.get(ME_URL, headers=bearer(token)).status_code == 401
+
+
 def test_token_of_missing_user_returns_401(client):
     token = make_token({"sub": "999999"})
 

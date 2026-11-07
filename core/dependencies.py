@@ -1,5 +1,5 @@
 from typing import Annotated
-from fastapi import Depends, HTTPException, status
+from fastapi import Depends, HTTPException, Query, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from sqlalchemy.orm import Session
 import jwt
@@ -30,7 +30,8 @@ def get_current_user(
         payload = jwt.decode(
             token,
             SECRET_KEY,
-            algorithms=[ALGORITHM]
+            algorithms=[ALGORITHM],
+            options={"require": ["exp", "sub"]}
         )
     except jwt.InvalidTokenError:
         raise unauthorized("Токен недействителен или истёк")
@@ -64,6 +65,14 @@ def get_current_admin(current_user: Current_user) -> User:
 Current_admin = Annotated[
     User,
     Depends(get_current_admin)
+]
+
+# Larger offsets overflow PostgreSQL bigint (500) and are never needed in practice.
+MAX_OFFSET = 1_000_000
+
+Page_offset = Annotated[
+    int,
+    Query(ge=0, le=MAX_OFFSET)
 ]
 
 Current_session = Annotated[

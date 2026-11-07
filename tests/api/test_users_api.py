@@ -39,6 +39,35 @@ def test_register_login_of_one_user_and_email_of_another_returns_409(client, use
     assert response.status_code == 409
 
 
+LONG_PASSWORD = "я" * 40  # 80 bytes in UTF-8, over the bcrypt limit of 72
+
+
+def test_register_password_over_72_bytes_returns_422(client):
+    assert register(client, password=LONG_PASSWORD).status_code == 422
+
+
+def test_login_with_password_over_72_bytes_returns_422_not_500(client, user):
+    response = client.post(LOGIN_URL, json={"login_or_email": user.login, "password": LONG_PASSWORD})
+
+    assert response.status_code == 422
+
+
+def test_email_is_case_insensitive(client):
+    created = register(client, email="NewBie@Example.COM")
+    login = client.post(LOGIN_URL, json={"login_or_email": "NEWBIE@example.com", "password": "password123"})
+    duplicate = register(client, login="other_login", email="newbie@example.com")
+
+    assert created.json()["email"] == "newbie@example.com"
+    assert login.status_code == 200
+    assert duplicate.status_code == 409
+
+
+def test_users_list_rejects_huge_offset(client, admin):
+    response = client.get("/users/list", params={"offset": 10**20}, headers=auth_headers(admin))
+
+    assert response.status_code == 422
+
+
 def test_register_login_with_at_sign_returns_422(client):
     assert register(client, login="new@bie").status_code == 422
 

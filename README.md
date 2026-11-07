@@ -15,7 +15,7 @@ REST API для бронирования переговорных комнат. 
 ## Быстрый старт (Docker)
 
 ```bash
-cp .env.example .env          # при желании сгенерируйте свой SECRET_KEY (см. ниже)
+cp .env.example .env          # и замените SECRET_KEY на свой (см. ниже), иначе API не стартует
 docker compose up --build
 ```
 
@@ -37,7 +37,7 @@ alembic upgrade head          # схема создаётся только ми�
 uvicorn main:app --reload
 ```
 
-Сгенерировать `SECRET_KEY` (не короче 32 символов, иначе приложение не стартует):
+Сгенерировать `SECRET_KEY` (не короче 32 символов; значение-заглушка из `.env.example` отклоняется — иначе любой, кто видел репозиторий, мог бы подделать токен):
 
 ```bash
 python -c "import secrets; print(secrets.token_urlsafe(32))"

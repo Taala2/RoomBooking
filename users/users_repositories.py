@@ -11,7 +11,7 @@ def get_user_by_id(db: Session, user_id: int):
 def get_user_by_login_or_email(db: Session, login: str, email: str):
     stmt = select(User).where(or_(
         User.login == login,
-        User.email == email
+        func.lower(User.email) == email.lower()
     ))
 
     return db.execute(stmt.limit(1)).scalars().first()

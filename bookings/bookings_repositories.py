@@ -20,11 +20,6 @@ def create_booking(db: Session, booking: Booking):
     db.refresh(booking)
     return booking
 
-def delete_booking(db: Session, booking: Booking):
-    db.delete(booking)
-    db.commit()
-    return True
-
 def update_booking(db: Session, booking: Booking):
     db.commit()
     db.refresh(booking)
